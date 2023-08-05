@@ -1,0 +1,20 @@
+{
+  "name": "walkingman",
+  "version": "1.0.0",
+  "author": {
+    "name": "Diego Vogel",
+    "email": "diegopvogel@gmail.com",
+    "url": "https://www.diego.works"
+  },
+  "scripts": {
+    "dev": "bin/dev",
+    "build": "bin/build"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "cssnano": "^6.0.1",
+    "postcss": "^8.4.24",
+    "postcss-cli": "^10.1.0",
+    "sass": "^1.63.6"
+  }
+}

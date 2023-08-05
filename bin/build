@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# Process and commit production CSS.
+  postcss style.css -r
+  git add style.css
+  git add style.css.map
+  git commit -m "Processed CSS for production."
