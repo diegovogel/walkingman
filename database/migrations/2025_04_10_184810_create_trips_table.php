@@ -13,8 +13,8 @@ return new class extends Migration {
             $table->decimal('distance', 6);
             $table->timestamp('departure');
             $table->timestamp('arrival')->nullable();
-            $table->boolean('destination_from_user')->default(false); // Destination came from a user, whether chosen or selected randomly.
-            $table->boolean('destination_is_random')->default(true); // Destination selected randomly, whether by the app or a user.
+            $table->boolean('destination_from_user')->default(false)->comment('True if destination came from a user, whether chosen or selected randomly.');
+            $table->boolean('destination_is_random')->default(true)->comment('True if destination was selected randomly, whether by the app or a user.');
             $table->foreignId('user_id')->nullable()->constrained();
 			$table->timestamps();
 		} );
