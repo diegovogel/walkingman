@@ -21,6 +21,7 @@ Fine it's just a playground for learning and improving skills.
 - Persistent session data (persisting score between sessions without sign-in).
 - Audio processing.
 - Video/image recognition with AI.
+- Event-driven architecture.
 - User accounts.
 
 ## Stack
