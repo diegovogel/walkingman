@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->string('state_name', 100);
             $table->decimal('latitude', 7, 4);
             $table->decimal('longitude', 7, 4);
+            $table->string('timezone', 40);
 			$table->timestamps();
 		} );
 	}
