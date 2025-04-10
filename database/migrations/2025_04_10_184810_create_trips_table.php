@@ -8,7 +8,7 @@ return new class extends Migration {
 	public function up() {
 		Schema::create( 'trips', function ( Blueprint $table ) {
 			$table->id();
-            $table->foreignId('origin_city_id')->constrained('cities')->nullOnDelete();
+            $table->foreignId('origin_city_id')->nullable()->constrained('cities')->nullOnDelete();
             $table->foreignId('destination_city_id')->nullable()->constrained('cities')->nullOnDelete();
             $table->decimal('distance', 6);
             $table->timestamp('departure');
