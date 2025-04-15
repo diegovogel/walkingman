@@ -10,7 +10,7 @@ class CitySeeder extends Seeder
 {
     public function run(): void
     {
-        $filePath = database_path('data/cities.json');
+        $filePath = static::getFilePath();
 
         if (! file_exists($filePath)) {
             Log::error("CitySeeder: file does not exist: {$filePath}");
@@ -48,5 +48,10 @@ class CitySeeder extends Seeder
         City::insert($cityData);
 
         Log::info('CitySeeder: '.count($cityData).' cities inserted');
+    }
+
+    protected function getFilePath(): string
+    {
+        return database_path('data/cities.json');
     }
 }
