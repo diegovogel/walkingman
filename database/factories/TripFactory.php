@@ -14,6 +14,22 @@ class TripFactory extends Factory
 
     public function definition(): array
     {
+        $previousTrip = Trip::orderBy('id', 'desc')->first();
+
+        if ($previousTrip) {
+            $originCity = $previousTrip->destination_city_id;
+        } else {
+            $originCity = City::inRandomOrder()->first();
+        }
+
+        $destinationCity = City::inRandomOrder()->first();
+
+        while ($originCity->id === $destinationCity->id) {
+            $destinationCity = City::inRandomOrder()->first();
+        }
+
+        dd($originCity, $destinationCity);
+
         return [
             'distance' => $this->faker->randomFloat(),
             'departure' => Carbon::now(),
