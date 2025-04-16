@@ -13,13 +13,28 @@ class PlayerFactory extends Factory
 
     public function definition(): array
     {
+        $belongsToUser = $this->faker->boolean();
+
+        if ($belongsToUser) {
+            $user = User::inRandomOrder()->first();
+
+            if (! $user) {
+                $user = User::factory()->create();
+            }
+        } else {
+            $user = null;
+        }
+
+        $nameWordsArray = $this->faker->words(2);
+        $playerName = implode('_', $nameWordsArray);
+
         return [
-            'name' => $this->faker->name(),
-            'current_score' => $this->faker->randomNumber(),
+            'name' => $playerName,
+            'current_score' => $this->faker->randomNumber(6),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
-            'user_id' => User::factory(),
+            'user_id' => $user,
         ];
     }
 }
