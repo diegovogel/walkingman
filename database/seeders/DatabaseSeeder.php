@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
         ]);
 
-        Trip::factory(30)->create();
+        for ($i = 0; $i < 30; $i++) {
+            Trip::factory()->create();
+        }
     }
 }

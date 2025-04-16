@@ -18,9 +18,11 @@ class TripFactory extends Factory
 
         // Each trip starts where the last one ended.
         if ($previousTrip) {
-            $originCity = $previousTrip->destination_city_id;
+            $originCity = $previousTrip->destinationCity;
+            $departure = Carbon::createFromTimestamp($previousTrip->arrival);
         } else {
             $originCity = City::inRandomOrder()->first();
+            $departure = Carbon::now();
         }
 
         $destinationCity = City::inRandomOrder()->first();
@@ -31,8 +33,6 @@ class TripFactory extends Factory
         }
 
         $distance = Trip::calculateDistance($originCity, $destinationCity);
-
-        $departure = Carbon::now();
         $arrival = Trip::calculateArrival($originCity, $destinationCity, $departure);
 
         $destinationCameFromUser = $this->faker->boolean();
