@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Player;
 use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,14 +14,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
+        // Create users.
+        for ($i = 0; $i < 100; $i++) {
+            $user = User::factory()->create();
+            Player::factory()->create(['user_id' => $user->id]);
+        }
 
+        // Create cities.
         $this->call([
             CitySeeder::class,
         ]);
 
+        // Create trips.
         for ($i = 0; $i < 30; $i++) {
             Trip::factory()->create();
         }
+
+        // Create anonymous players.
+        Player::factory(10)->create();
     }
 }
