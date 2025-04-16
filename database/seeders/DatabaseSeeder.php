@@ -32,5 +32,10 @@ class DatabaseSeeder extends Seeder
 
         // Create anonymous players.
         Player::factory(10)->create();
+
+        // Create games.
+        $this->call([
+            GameSeeder::class,
+        ]);
     }
 }
