@@ -16,6 +16,7 @@ class TripFactory extends Factory
     {
         $previousTrip = Trip::orderBy('id', 'desc')->first();
 
+        // Each trip starts where the last one ended.
         if ($previousTrip) {
             $originCity = $previousTrip->destination_city_id;
         } else {
@@ -24,24 +25,39 @@ class TripFactory extends Factory
 
         $destinationCity = City::inRandomOrder()->first();
 
+        // We don't want the origin and destination to be the same.
         while ($originCity->id === $destinationCity->id) {
             $destinationCity = City::inRandomOrder()->first();
         }
 
-        dd($originCity, $destinationCity);
+        $distance = Trip::calculateDistance($originCity, $destinationCity);
+
+        $departure = Carbon::now();
+        $arrival = Trip::calculateArrival($originCity, $destinationCity, $departure);
+
+        $destinationCameFromUser = $this->faker->boolean();
+
+        if ($destinationCameFromUser) {
+            $user = User::inRandomOrder()->first();
+
+            if (! $user) {
+                $user = User::factory()->create();
+            }
+        } else {
+            $user = null;
+        }
 
         return [
-            'distance' => $this->faker->randomFloat(),
-            'departure' => Carbon::now(),
-            'arrival' => Carbon::now(),
-            'destination_from_user' => $this->faker->boolean(),
+            'distance' => $distance,
+            'departure' => $departure,
+            'arrival' => $arrival,
+            'destination_from_user' => $destinationCameFromUser,
             'destination_is_random' => $this->faker->boolean(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-
-            'origin_city_id' => City::factory(),
-            'destination_city_id' => City::factory(),
-            'user_id' => User::factory(),
+            'origin_city_id' => $originCity,
+            'destination_city_id' => $destinationCity,
+            'user_id' => $user,
         ];
     }
 }
