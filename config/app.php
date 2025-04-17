@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // The speed in MPH at which the walking man walks.
+    'walking_speed' => env('WALKING_SPEED', 3),
+
 ];

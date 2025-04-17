@@ -1,0 +1,29 @@
+[
+    {
+        "city": "New York",
+        "state_id": "NY",
+        "state_name": "New York",
+        "lat": 40.6943,
+        "lng": -73.9249,
+        "population": 18972871,
+        "id": 1840034016
+    },
+    {
+        "city": "Los Angeles",
+        "state_id": "CA",
+        "state_name": "California",
+        "lat": 34.1141,
+        "lng": -118.4068,
+        "population": 12121244,
+        "id": 1840020491
+    },
+    {
+        "city": "Chicago",
+        "state_id": "IL",
+        "state_name": "Illinois",
+        "lat": 41.8375,
+        "lng": -87.6866,
+        "population": 8595181,
+        "id": 1840000494
+    }
+]
