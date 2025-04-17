@@ -75,6 +75,7 @@ class GameSeeder extends Seeder
             'long_description' => $longDescriptionHtml,
             'status' => $status,
             'handle' => $data->matter('handle'),
+            'result_model' => $data->matter('result_model'),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
