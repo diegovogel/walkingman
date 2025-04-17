@@ -4,6 +4,7 @@ short_description: Yell something at your phone. Get more points for saying what
 max_possible_points: 100
 status: published
 handle: scream
+result_model: App\Models\SomeGameResult
 ---
 
 Tap **play** and yell at your phone.<br> _Note: every submission requires video so the bonus can be verified. If you

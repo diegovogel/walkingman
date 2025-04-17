@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Game;
+use App\Models\GameResult;
 use App\Models\Player;
 use App\Models\Trip;
 use App\Models\User;
@@ -37,5 +39,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             GameSeeder::class,
         ]);
+
+        // Create game results.
+        $players = Player::all();
+        foreach ($players as $player) {
+            GameResult::factory(rand(1, 50))->create(['player_id' => $player->id]);
+        }
     }
 }

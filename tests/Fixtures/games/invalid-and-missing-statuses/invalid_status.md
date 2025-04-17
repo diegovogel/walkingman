@@ -4,4 +4,5 @@ short_description: Yell something at your phone. Get more points for saying what
 max_possible_points: 100
 status: asdfads
 handle: scream
+result_model: App\Models\SomeGameResult
 ---

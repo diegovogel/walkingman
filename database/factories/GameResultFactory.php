@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\GameResult;
-use App\Models\Player;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -14,15 +14,19 @@ class GameResultFactory extends Factory
 
     public function definition(): array
     {
+        $publishedGames = Game::where('status', GameStatus::PUBLISHED)->get();
+        $game = $publishedGames->random();
+
+        $gameResultModel = $game->result_model;
+        $specificGameResult = $gameResultModel::factory()->create();
+
         return [
-            'resultable_type' => $this->faker->word(),
-            'resultable_id' => $this->faker->word(),
-            'score' => $this->faker->randomNumber(),
+            'resultable_type' => $game->result_model,
+            'resultable_id' => $specificGameResult->id,
+            'score' => $specificGameResult->calculateScore(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-
-            'player_id' => Player::factory(),
-            'game_id' => Game::factory(),
+            'game_id' => $game->id,
         ];
     }
 }

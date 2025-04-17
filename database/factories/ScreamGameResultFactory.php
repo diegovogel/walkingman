@@ -13,8 +13,7 @@ class ScreamGameResultFactory extends Factory
     public function definition(): array
     {
         return [
-            'media_id' => $this->faker->word(),
-            'loudness' => $this->faker->randomNumber(),
+            'loudness' => rand(0, 40),
             'phrase_was_spoken' => $this->faker->boolean(),
             'performed_in_public' => $this->faker->boolean(),
             'created_at' => Carbon::now(),
