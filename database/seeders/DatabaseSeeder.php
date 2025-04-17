@@ -40,10 +40,8 @@ class DatabaseSeeder extends Seeder
             GameSeeder::class,
         ]);
 
-        // Create game results.
-        $players = Player::all();
-        foreach ($players as $player) {
-            GameResult::factory(rand(1, 50))->create(['player_id' => $player->id]);
-        }
+        // Create game results. We create an average of 3 results per player.
+        $playerCount = Player::count();
+        GameResult::factory($playerCount * 3)->create();
     }
 }
