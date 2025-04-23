@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -23,14 +24,6 @@ class User extends Authenticatable
         'email',
         'password',
     ];
-
-    /**
-     * Get the player associated with the user.
-     */
-    public function player(): HasOne
-    {
-        return $this->hasOne(Player::class);
-    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -53,5 +46,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's initials
+     */
+    public function initials(): string
+    {
+        return Str::of($this->name)
+            ->explode(' ')
+            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
+            ->implode('');
+    }
+
+    /**
+     * Get the player associated with the user.
+     */
+    public function player(): HasOne
+    {
+        return $this->hasOne(Player::class);
     }
 }
