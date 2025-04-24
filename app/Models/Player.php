@@ -16,6 +16,18 @@ class Player extends Model
         'current_score',
     ];
 
+    /**
+     * Find a player by name.
+     */
+    public static function findByName(?string $playerName): ?Player
+    {
+        if (empty($playerName)) {
+            return null;
+        }
+
+        return static::where('name', $playerName)->first();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
