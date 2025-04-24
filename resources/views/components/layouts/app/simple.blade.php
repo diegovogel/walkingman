@@ -6,11 +6,13 @@
 </head>
 <body class="min-h-screen bg-white dark:bg-zinc-800">
 
-<header>
-    <h1>Walking Man</h1>
+<header class="pt-10 px-3">
+    <a class="text-center text-4xl font-extrabold uppercase block">Walking Man</a>
+
+    <h1 class="text-2xl text-center py-6">{{$pageTitle ?? ($title ?? '')}}</h1>
 </header>
 
-{{ $slot }}
+<main class="px-4">{{$slot}}</main>
 
 @fluxScripts
 </body>

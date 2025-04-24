@@ -10,6 +10,8 @@ class GameController extends Controller
 
     public function show(Game $game)
     {
+        dump($game->attributesToArray());
+
         return view('game', ['game' => $game]);
     }
 }
