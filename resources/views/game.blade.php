@@ -3,15 +3,19 @@
 
     <div class="game__long-description mb-8">{!! $game->long_description !!}</div>
 
-    <flux:modal.trigger name="play-game">
-        <x-button centered
-                  size="large">Play
-        </x-button>
-    </flux:modal.trigger>
+    @if($okToPlay)
+        <x-dynamic-component :component="$gameComponentName"/>
+    @else
+        <p class="mb-4">Please
+            <a href="{{route('login')}}">log in</a>
+            to play this game.
+        </p>
 
-    <flux:modal name="play-game">
+        <p class="mb-4">
+            Don't want to create an account? All you need is a
+            <a href="{{route('view-player-form')}}">player name</a>
+            .
+        </p>
+    @endif
 
-    </flux:modal>
-
-    <livewire:games.scream/>
 </x-layouts.app.simple>
