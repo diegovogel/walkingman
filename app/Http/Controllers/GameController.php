@@ -25,12 +25,18 @@ class GameController extends Controller
      */
     public function okToPlay(): bool
     {
+        // First try to get the player from the user.
         $user = auth()->user();
         $player = $user?->player;
 
+        // If there's no user player, check for a player cookie.
         if (empty($player)) {
             $playerName = request()->cookie('player');
             $player = Player::findByName($playerName);
+
+            if (empty($player)) {
+                cookie()->queue('player', null, -1);
+            }
         }
 
         return ! empty($player);

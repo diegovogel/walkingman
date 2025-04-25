@@ -13,7 +13,10 @@ class PlayerController extends Controller
     {
         $request->validate([
             'player_name' => 'required|unique:players,name|max:30|regex:/^[A-Za-z0-9_-]+$/',
-        ]);
+        ],
+            [
+                'player_name.regex' => 'Player name can only contain letters, numbers, hyphens, and underscores.',
+            ]);
 
         try {
             $player = Player::create([
