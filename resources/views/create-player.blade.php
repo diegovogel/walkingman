@@ -31,8 +31,4 @@
                 @enderror
         </label>
     </form>
-
-    @php
-        phpinfo();
-    @endphp
 </x-layouts.app.simple>

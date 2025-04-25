@@ -1,4 +1,13 @@
 <div>
+    @session('success')
+    <mark>Success!</mark>
+    @endsession
+
+    @session('error')
+    <mark>Error!</mark>
+    <p>{{$value}}</p>
+    @endsession
+
     <form method="POST"
           action="{{route('submit-scream-game-result')}}"
           enctype="multipart/form-data"
