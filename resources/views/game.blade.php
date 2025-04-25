@@ -3,6 +3,8 @@
 
     <div class="game__long-description mb-8">{!! $game->long_description !!}</div>
 
+    <hr>
+
     @if($okToPlay)
         <x-dynamic-component :component="$gameComponentName"/>
     @else

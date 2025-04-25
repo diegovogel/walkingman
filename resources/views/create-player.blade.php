@@ -2,10 +2,10 @@
                       page-title="Create a player">
 
     @session('success')
-    <div class="bg-emerald-100 rounded-sm p-4 pb-0.5">
+    <div class="bg-emerald-100 rounded-sm p-4">
         <p><strong>{{$value}}</strong></p>
 
-        <p class="">You can now play games.</p>
+        <p class="mb-0">You can now play games.</p>
     </div>
     @endsession
 
@@ -21,6 +21,7 @@
                    value="{{old('player_name')}}"
                    @error('player_name') aria-invalid="true"
                    @enderror
+                   required
                    placeholder="l33t_h4kkr"/>
 
             @error('player_name')
@@ -30,4 +31,8 @@
                 @enderror
         </label>
     </form>
+
+    @php
+        phpinfo();
+    @endphp
 </x-layouts.app.simple>

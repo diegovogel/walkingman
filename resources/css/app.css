@@ -1,6 +1,9 @@
-@import "@picocss/pico/css/pico.css";
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+
+@layer components {
+    @import "@picocss/pico/css/pico.css";
+}
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
