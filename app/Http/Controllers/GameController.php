@@ -23,7 +23,7 @@ class GameController extends Controller
      *
      * @return bool Returns true if all conditions are met, or false if not.
      */
-    public function okToPlay(): bool
+    protected function okToPlay(): bool
     {
         // First try to get the player from the user.
         $user = auth()->user();
