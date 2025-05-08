@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
 class ScreamGameResultController extends Controller
@@ -20,33 +19,13 @@ class ScreamGameResultController extends Controller
             ]
         );
 
-        $media = $this->createMedia($request->file('scream_file'));
+        $media = Media::createFromUploadedFile($request->file('scream_file'), 'screams');
 
         if (empty($media)) {
             return redirect()->back()->with('error', 'There was an error uploading your scream video. Try again?');
         }
 
         return redirect()->back()->with('success', 'Scream result processed.');
-    }
-
-    // TODO: this should probably be a Media method... createFromUpload or something.
-    protected function createMedia(UploadedFile $file): ?Media
-    {
-        try {
-            $path = $file->store('screams');
-
-            return Media::create([
-                'disk' => config('filesystems.default'),
-                'path' => $path,
-                'original_filename' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error creating scream game media item: '.$e->getMessage());
-
-            return null;
-        }
     }
 
     // TODO: finish writing this.
