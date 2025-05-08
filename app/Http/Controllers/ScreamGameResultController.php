@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Media;
+use App\Models\ScreamGameResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ScreamGameResultController extends Controller
 {
@@ -19,28 +18,16 @@ class ScreamGameResultController extends Controller
             ]
         );
 
-        $media = Media::createFromUploadedFile($request->file('scream_file'), 'screams');
+        $gameResult = new ScreamGameResult;
 
-        if (empty($media)) {
+        $gameResult->createMedia($request->file('scream_file'));
+
+        if (empty($gameResult->media)) {
             return redirect()->back()->with('error', 'There was an error uploading your scream video. Try again?');
         }
 
+        $gameResult->analyzeMedia();
+
         return redirect()->back()->with('success', 'Scream result processed.');
-    }
-
-    // TODO: finish writing this.
-    protected function analyzeMedia(Media|RedirectResponse $media)
-    {
-        try {
-            $loudness = $this->calculateLoudness($media);
-
-            $phraseWasSpoken = $this->parsePhrase($media);
-
-            $wasPerformedInPublic = $this->identifyIfPublic($media);
-        } catch (\Exception $e) {
-            Log::error('Error analyzing scream game media: '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'There was an error analyzing your scream video. Try again?');
-        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,14 @@ class Media extends Model
         'original_filename',
         'mime_type',
         'size',
+        'mediable_id',
+        'mediable_type',
     ];
+
+    public function mediable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 
     /**
      * Generate the URL for the stored file.
