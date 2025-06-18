@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 
 class ScreamGameResult extends Model implements GameResultInterface
 {
@@ -61,7 +60,7 @@ class ScreamGameResult extends Model implements GameResultInterface
     }
 
     // TODO: finish writing this.
-    public function analyzeMedia(?Media $media = null)
+    public function analyzeMedia(?Media $media = null): bool
     {
         $media = $media ?? $this->media;
 
@@ -72,9 +71,26 @@ class ScreamGameResult extends Model implements GameResultInterface
 
             $this->performed_in_public = $this->identifyIfPublic($media);
         } catch (\Exception $e) {
-            Log::error('Error analyzing scream game media: '.$e->getMessage());
+            report('Error analyzing scream game media: '.$e->getMessage());
 
-            return redirect()->back()->with('error', 'There was an error analyzing your scream video. Try again?');
+            return false;
         }
+
+        return true;
+    }
+
+    protected function calculateLoudness(Media $media): int
+    {
+        return 0;
+    }
+
+    protected function parsePhrase(Media $media): bool
+    {
+        return false;
+    }
+
+    protected function identifyIfPublic(Media $media): bool
+    {
+        return false;
     }
 }

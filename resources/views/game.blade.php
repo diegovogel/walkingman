@@ -6,7 +6,9 @@
     <hr>
 
     @if($okToPlay)
-        <x-dynamic-component :component="$gameComponentName"/>
+        <livewire:dynamic-component :is="$gameComponentName"
+                                    :key="$gameComponentName"/>
+        {{--        <x-dynamic-component :component="$gameComponentName"/>--}}
     @else
         @auth
             <p class="mb-4">Please <a href="{{route('view-player-form')}}">create a player</a> to start playing.</p>

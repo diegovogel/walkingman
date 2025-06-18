@@ -23,11 +23,13 @@ class ScreamGameResultController extends Controller
         $gameResult->createMedia($request->file('scream_file'));
 
         if (empty($gameResult->media)) {
-            return redirect()->back()->with('error', 'There was an error uploading your scream video. Try again?');
+            return redirect()->back()->with('error', 'There was an error uploading your scream video. Maybe try again?');
         }
 
-        $gameResult->analyzeMedia();
-
-        return redirect()->back()->with('success', 'Scream result processed.');
+        if ($gameResult->analyzeMedia()) {
+            return redirect()->back()->with('success', 'Scream result processed.');
+        } else {
+            return redirect()->back()->with('error', 'There was an error analyzing your scream video. Maybe try again?');
+        }
     }
 }
