@@ -13,14 +13,25 @@ class extends Component {
     {
         $trip = Trip::query()
             ->with(['originLocation.city', 'destinationLocation.city'])
+            ->whereNotNull('origin_location_id')
+            ->whereNotNull('destination_location_id')
             ->where('departure', '<=', now())
+            ->where('arrival', '>=', now())
             ->latest('departure')
             ->first();
+
+        // The trip line labels two zones but shows one date, so read every date
+        // in the first of them rather than in the app's own timezone.
+        $eastern = 'America/New_York';
+        $pacific = 'America/Los_Angeles';
 
         return [
             'trip' => $trip,
             'milesRemaining' => $trip?->milesRemaining(),
             'timeRemaining' => $trip?->timeRemaining(),
+            'departedOn' => $trip?->departedAt()->setTimezone($eastern),
+            'arrivesEastern' => $trip?->arrivesAt()->setTimezone($eastern),
+            'arrivesPacific' => $trip?->arrivesAt()->setTimezone($pacific),
         ];
     }
 }; ?>
@@ -43,16 +54,13 @@ class extends Component {
             <div class="mt-3 flex items-start justify-between gap-6">
                 <div class="text-start">
                     <flux:text class="font-medium">{{ $trip->originLocation->full_address }}</flux:text>
-                    <flux:text size="sm" variant="subtle">{{ $trip->departedAt()->format('n/j/y') }}</flux:text>
+                    <flux:text size="sm" variant="subtle">{{ $departedOn->format('n/j/y') }}</flux:text>
                 </div>
 
                 <div class="text-end">
                     <flux:text class="font-medium">{{ $trip->destinationLocation->full_address }}</flux:text>
-                    <flux:text size="sm" variant="subtle">{{ $trip->arrivesAt()->format('n/j/y') }}</flux:text>
-                    <flux:text size="sm" variant="subtle">
-                        {{ $trip->arrivesAt()->setTimezone('America/New_York')->format('G:i') }} ET
-                        / {{ $trip->arrivesAt()->setTimezone('America/Los_Angeles')->format('G:i') }} PT
-                    </flux:text>
+                    <flux:text size="sm" variant="subtle">{{ $arrivesEastern->format('n/j/y') }}</flux:text>
+                    <flux:text size="sm" variant="subtle">{{ $arrivesEastern->format('G:i') }} ET / {{ $arrivesPacific->format('G:i') }} PT</flux:text>
                 </div>
             </div>
         </div>
@@ -75,10 +83,6 @@ class extends Component {
 
         <flux:text>
             {{ __('For years I would drive by the walking man in Lexington, KY and wonder why he was there and where he was going. Now I know.*') }}
-        </flux:text>
-
-        <flux:text>
-            {{ __("Why should you play for a chance to decide where he's going next? Why wouldn't you? Pointless games are the spice of life.") }}
         </flux:text>
 
         <flux:text>

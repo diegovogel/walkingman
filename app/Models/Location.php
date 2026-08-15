@@ -33,7 +33,7 @@ class Location extends Model
             $this->street_address,
             $this->city->name,
             trim($this->city->state_abbreviation.' '.$this->postal_code),
-        ])->implode(', '));
+        ])->filter()->implode(', '));
     }
 
     protected function casts(): array

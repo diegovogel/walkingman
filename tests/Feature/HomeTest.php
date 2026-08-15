@@ -76,6 +76,48 @@ test('it shows the trip that is currently underway', function () {
         ->assertDontSee($notYetDeparted->destinationLocation->full_address);
 });
 
+test('it does not present an arrived trip as still underway', function () {
+    Trip::factory()->create([
+        'departure' => now()->subDays(10),
+        'arrival' => now()->subDay(),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertOk()
+        ->assertDontSee('miles remaining')
+        ->assertDontSee('Arriving in');
+});
+
+test('it ignores a trip whose locations were never backfilled', function () {
+    Trip::factory()->create([
+        'origin_location_id' => null,
+        'destination_location_id' => null,
+        'departure' => now()->subDays(10),
+        'arrival' => now()->addDays(2),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertOk()->assertDontSee('miles remaining');
+});
+
+test('it reads the arrival date in the timezone it labels', function () {
+    $this->travelTo(Carbon::parse('2026-08-14 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => now()->subDay(),
+        'arrival' => Carbon::parse('2026-08-15 01:00:00'),
+    ]);
+
+    $response = $this->get('/');
+
+    // 01:00 UTC has not reached the 15th in either labelled zone yet.
+    $response->assertSee('21:00 ET / 18:00 PT')
+        ->assertSee('8/14/26')
+        ->assertDontSee('8/15/26');
+});
+
 test('it does not show the play button, leaderboard link, or lifetime stats', function () {
     Trip::factory()->create([
         'departure' => now()->subDays(10),
@@ -84,7 +126,6 @@ test('it does not show the play button, leaderboard link, or lifetime stats', fu
 
     $response = $this->get('/');
 
-    // The body copy says "play" in lowercase, so match the button's label exactly.
     $response->assertDontSee('PLAY')
         ->assertDontSee('Leaderboard')
         ->assertDontSee('trips completed')
