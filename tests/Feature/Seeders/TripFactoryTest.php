@@ -18,11 +18,11 @@ it('should create trips that originate where the previous trip ended', function 
         Trip::factory()->create();
     }
 
-    $destination1 = Trip::first()->destinationCity;
-    $destination2 = Trip::skip(1)->first()->destinationCity;
+    $destination1 = Trip::first()->destinationLocation;
+    $destination2 = Trip::skip(1)->first()->destinationLocation;
 
-    $origin2 = Trip::skip(1)->first()->originCity;
-    $origin3 = Trip::skip(2)->first()->originCity;
+    $origin2 = Trip::skip(1)->first()->originLocation;
+    $origin3 = Trip::skip(2)->first()->originLocation;
 
     expect($destination1->id)->toBe($origin2->id)
         ->and($destination2->id)->toBe($origin3->id);
