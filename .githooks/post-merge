@@ -1,0 +1,8 @@
+#!/bin/sh
+# Installed by scripts/agent-env.sh (install-hooks). After a merge/pull/rebase
+# that changed a lockfile, reconcile this checkout's dependencies so the manifest
+# can't list a package nobody installed. The actual install is the per-project
+# section's project_sync_deps; this just delegates so the logic lives in one place.
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -x "$root/scripts/agent-env.sh" ] || exit 0
+exec "$root/scripts/agent-env.sh" sync-deps

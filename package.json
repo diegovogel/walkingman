@@ -1,9 +1,13 @@
 {
+    "name": "walkingman",
     "private": true,
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "node scripts/guard-not-in-env.cjs && vite",
+        "serve": "./scripts/agent-env.sh serve",
+        "stop": "./scripts/agent-env.sh stop",
+        "destroy": "./scripts/agent-env.sh destroy"
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.0.7",

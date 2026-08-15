@@ -21,3 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Agent environments (scripts/agent-env.sh). Only the worktrees are ignored, not
+# all of .claude/ — committed project config lives there too.
+/logs
+/.claude/worktrees
