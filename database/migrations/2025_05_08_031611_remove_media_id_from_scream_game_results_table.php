@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('scream_game_results', function (Blueprint $table) {
+            $table->dropForeign(['media_id']);
             $table->dropColumn('media_id');
         });
     }
