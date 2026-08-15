@@ -53,9 +53,7 @@ class Trip extends Model
      */
     public function milesRemaining(): float
     {
-        $hoursRemaining = Carbon::now()->diffInHours($this->arrivesAt(), absolute: false);
-
-        return max(0, $hoursRemaining * config('app.walking_speed'));
+        return $this->minutesRemaining() / 60 * config('app.walking_speed');
     }
 
     /**
@@ -63,13 +61,18 @@ class Trip extends Model
      */
     public function timeRemaining(): array
     {
-        $minutes = (int) max(0, floor(Carbon::now()->diffInMinutes($this->arrivesAt(), absolute: false)));
+        $minutes = $this->minutesRemaining();
 
         return [
             'days' => intdiv($minutes, 1440),
             'hours' => intdiv($minutes % 1440, 60),
             'minutes' => $minutes % 60,
         ];
+    }
+
+    private function minutesRemaining(): int
+    {
+        return (int) max(0, Carbon::now()->diffInMinutes($this->arrivesAt(), absolute: false));
     }
 
     protected function casts(): array

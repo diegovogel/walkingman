@@ -16,17 +16,16 @@ class LocationFactory extends Factory
             'city_id' => City::factory(),
             'street_address' => $this->faker->streetAddress(),
             'postal_code' => $this->faker->postcode(),
-            'latitude' => fn (array $attributes): float => $this->near($attributes['city_id'], 'latitude'),
-            'longitude' => fn (array $attributes): float => $this->near($attributes['city_id'], 'longitude'),
         ];
     }
 
-    /**
-     * Puts the address within a few miles of its city, so that generated trips
-     * cover realistic distances rather than spanning the globe.
-     */
-    private function near(int $cityId, string $coordinate): float
+    public function configure(): static
     {
-        return City::find($cityId)->{$coordinate} + $this->faker->randomFloat(4, -0.05, 0.05);
+        return $this->afterMaking(function (Location $location): void {
+            // Keep the address within a few miles of its city, so that generated
+            // trips cover realistic distances rather than spanning the globe.
+            $location->latitude ??= $location->city->latitude + $this->faker->randomFloat(4, -0.05, 0.05);
+            $location->longitude ??= $location->city->longitude + $this->faker->randomFloat(4, -0.05, 0.05);
+        });
     }
 }

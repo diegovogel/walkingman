@@ -16,7 +16,9 @@ test('the home page renders for guests', function () {
 test('the home page renders before any trips exist', function () {
     $response = $this->get('/');
 
-    $response->assertOk()->assertSee('What is this?');
+    $response->assertOk()
+        ->assertSee('What is this?')
+        ->assertDontSee('miles remaining');
 });
 
 test('it shows the full street address of the origin and destination', function () {

@@ -30,10 +30,7 @@ class extends Component {
 
     <flux:text class="mt-3 text-lg">{{ __('Where will he go next?') }}</flux:text>
 
-    {{-- The sculpture photo is dropped in separately, so don't ask for it until it's there. --}}
-    @if (file_exists(public_path('images/walking-man.png')))
-        <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="mt-8 h-36 w-auto" />
-    @endif
+    <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="mt-8 h-36 w-auto" />
 
     @if ($trip)
         <div class="mt-8 w-full">

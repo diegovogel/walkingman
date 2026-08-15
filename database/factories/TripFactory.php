@@ -20,7 +20,7 @@ class TripFactory extends Factory
         // Each trip starts where the last one ended.
         if ($previousTrip) {
             $originLocation = $previousTrip->destinationLocation;
-            $departure = Carbon::createFromTimestamp($previousTrip->arrival);
+            $departure = $previousTrip->arrivesAt();
         } else {
             $originLocation = $this->locationInRandomCity();
             $departure = Carbon::now();
@@ -69,8 +69,6 @@ class TripFactory extends Factory
             ->inRandomOrder()
             ->first();
 
-        return $city
-            ? Location::factory()->for($city)->create()
-            : Location::factory()->create();
+        return Location::factory()->for($city ?? City::factory())->create();
     }
 }
