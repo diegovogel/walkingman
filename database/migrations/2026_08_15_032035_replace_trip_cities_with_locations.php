@@ -29,13 +29,16 @@ return new class extends Migration
             $table->foreignId('destination_city_id')->nullable()->after('origin_city_id')->constrained('cities')->nullOnDelete();
         });
 
+        // Correlated subqueries rather than joined updates: SQLite drops the
+        // joined alias from the SET clause, and this project runs on SQLite by
+        // default and in tests.
         DB::table('trips')
-            ->join('locations as origin', 'origin.id', '=', 'trips.origin_location_id')
-            ->update(['trips.origin_city_id' => DB::raw('origin.city_id')]);
+            ->whereNotNull('origin_location_id')
+            ->update(['origin_city_id' => DB::raw('(select city_id from locations where locations.id = trips.origin_location_id)')]);
 
         DB::table('trips')
-            ->join('locations as destination', 'destination.id', '=', 'trips.destination_location_id')
-            ->update(['trips.destination_city_id' => DB::raw('destination.city_id')]);
+            ->whereNotNull('destination_location_id')
+            ->update(['destination_city_id' => DB::raw('(select city_id from locations where locations.id = trips.destination_location_id)')]);
 
         Schema::table('trips', function (Blueprint $table) {
             $table->dropConstrainedForeignId('origin_location_id');
