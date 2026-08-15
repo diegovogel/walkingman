@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\City;
+use App\Models\Location;
 use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,22 +19,18 @@ class TripFactory extends Factory
 
         // Each trip starts where the last one ended.
         if ($previousTrip) {
-            $originCity = $previousTrip->destinationCity;
-            $departure = Carbon::createFromTimestamp($previousTrip->arrival);
+            $originLocation = $previousTrip->destinationLocation;
+            $departure = $previousTrip->arrivesAt();
         } else {
-            $originCity = City::inRandomOrder()->first();
+            $originLocation = $this->locationInRandomCity();
             $departure = Carbon::now();
         }
 
-        $destinationCity = City::inRandomOrder()->first();
+        // We don't want the origin and destination to be in the same city.
+        $destinationLocation = $this->locationInRandomCity(excluding: $originLocation->city_id);
 
-        // We don't want the origin and destination to be the same.
-        while ($originCity->id === $destinationCity->id) {
-            $destinationCity = City::inRandomOrder()->first();
-        }
-
-        $distance = Trip::calculateDistance($originCity, $destinationCity);
-        $arrival = Trip::calculateArrival($originCity, $destinationCity, $departure);
+        $distance = Trip::calculateDistance($originLocation, $destinationLocation);
+        $arrival = Trip::calculateArrival($originLocation, $destinationLocation, $departure);
 
         $destinationCameFromUser = $this->faker->boolean();
 
@@ -55,9 +52,23 @@ class TripFactory extends Factory
             'destination_is_random' => $this->faker->boolean(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-            'origin_city_id' => $originCity,
-            'destination_city_id' => $destinationCity,
+            'origin_location_id' => $originLocation,
+            'destination_location_id' => $destinationLocation,
             'user_id' => $user,
         ];
+    }
+
+    /**
+     * Builds a location in one of the seeded cities, generating a city of its
+     * own only when none have been seeded.
+     */
+    private function locationInRandomCity(?int $excluding = null): Location
+    {
+        $city = City::query()
+            ->when($excluding, fn ($query) => $query->whereKeyNot($excluding))
+            ->inRandomOrder()
+            ->first();
+
+        return Location::factory()->for($city ?? City::factory())->create();
     }
 }

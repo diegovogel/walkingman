@@ -12,8 +12,8 @@ class Trip extends Model
     use HasFactory;
 
     protected $fillable = [
-        'origin_city_id',
-        'destination_city_id',
+        'origin_location_id',
+        'destination_location_id',
         'distance',
         'departure',
         'arrival',
@@ -22,19 +22,57 @@ class Trip extends Model
         'user_id',
     ];
 
-    public function originCity(): BelongsTo
+    public function originLocation(): BelongsTo
     {
-        return $this->belongsTo(City::class, 'origin_city_id');
+        return $this->belongsTo(Location::class, 'origin_location_id');
     }
 
-    public function destinationCity(): BelongsTo
+    public function destinationLocation(): BelongsTo
     {
-        return $this->belongsTo(City::class, 'destination_city_id');
+        return $this->belongsTo(Location::class, 'destination_location_id');
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function departedAt(): Carbon
+    {
+        return Carbon::createFromTimestamp($this->departure);
+    }
+
+    public function arrivesAt(): Carbon
+    {
+        return Carbon::createFromTimestamp($this->arrival);
+    }
+
+    /**
+     * Miles left to walk, derived from the time left rather than stored, so it
+     * stays consistent with the arrival time the trip was created with.
+     */
+    public function milesRemaining(): float
+    {
+        return $this->minutesRemaining() / 60 * config('app.walking_speed');
+    }
+
+    /**
+     * @return array{days: int, hours: int, minutes: int}
+     */
+    public function timeRemaining(): array
+    {
+        $minutes = $this->minutesRemaining();
+
+        return [
+            'days' => intdiv($minutes, 1440),
+            'hours' => intdiv($minutes % 1440, 60),
+            'minutes' => $minutes % 60,
+        ];
+    }
+
+    private function minutesRemaining(): int
+    {
+        return (int) max(0, Carbon::now()->diffInMinutes($this->arrivesAt(), absolute: false));
     }
 
     protected function casts(): array
@@ -48,13 +86,11 @@ class Trip extends Model
     }
 
     /**
-     * Calculates the distance between two cities using the Haversine formula.
+     * Calculates the distance between two locations using the Haversine formula.
      *
-     * @param  City  $origin  An associative array containing the latitude and longitude of the origin city.
-     * @param  City  $destination  An associative array containing the latitude and longitude of the destination city.
      * @return float The calculated distance in miles.
      */
-    public static function calculateDistance(City $origin, City $destination): float
+    public static function calculateDistance(Location $origin, Location $destination): float
     {
         $lat1 = deg2rad($origin->latitude);
         $lon1 = deg2rad($origin->longitude);
@@ -72,7 +108,7 @@ class Trip extends Model
         return $c * $r;
     }
 
-    public static function calculateArrival(City $origin, City $destination, ?Carbon $departure = null): Carbon
+    public static function calculateArrival(Location $origin, Location $destination, ?Carbon $departure = null): Carbon
     {
         $departure = $departure ?? Carbon::now();
         $distance = self::calculateDistance($origin, $destination);
