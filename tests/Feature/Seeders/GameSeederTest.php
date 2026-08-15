@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('should add a game to the database for each game file', function () {
-    ($this->setDirectory)(__DIR__.'/../../fixtures/games/valid');
+    ($this->setDirectory)(__DIR__.'/../../Fixtures/games/valid');
 
     $this->gameSeeder->run();
 
@@ -23,7 +23,7 @@ it('should add a game to the database for each game file', function () {
 });
 
 it('should only create games from Markdown files', function () {
-    ($this->setDirectory)(__DIR__.'/../../fixtures/games/valid');
+    ($this->setDirectory)(__DIR__.'/../../Fixtures/games/valid');
 
     $this->gameSeeder->run();
 
@@ -34,7 +34,7 @@ it('should only create games from Markdown files', function () {
 });
 
 it('should log an error if no game files are found', function () {
-    ($this->setDirectory)(__DIR__.'/../../fixtures/games/no-game-files');
+    ($this->setDirectory)(__DIR__.'/../../Fixtures/games/no-game-files');
 
     Log::shouldReceive('warning')
         ->once()
@@ -44,7 +44,7 @@ it('should log an error if no game files are found', function () {
 });
 
 it('should skip a game if there is a problem getting its info', function () {
-    ($this->setDirectory)(__DIR__.'/../../fixtures/games/some-invalid');
+    ($this->setDirectory)(__DIR__.'/../../Fixtures/games/some-invalid');
 
     $this->gameSeeder->run();
 
@@ -52,7 +52,7 @@ it('should skip a game if there is a problem getting its info', function () {
 });
 
 it('should set the game status to "draft" if the given status is invalid or missing', function () {
-    ($this->setDirectory)(__DIR__.'/../../fixtures/games/invalid-and-missing-statuses');
+    ($this->setDirectory)(__DIR__.'/../../Fixtures/games/invalid-and-missing-statuses');
 
     $this->gameSeeder->run();
 
