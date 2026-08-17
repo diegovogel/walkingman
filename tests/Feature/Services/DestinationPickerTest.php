@@ -170,6 +170,29 @@ it('reuses the existing city row when the address matches one', function () {
         ->and(City::count())->toBe(2);
 });
 
+it('rejects an address that resolves back into the origin city', function () {
+    $minneapolis = createMinneapolis();
+    $origin = Location::factory()->for($minneapolis)->create();
+
+    City::factory()->create([
+        'name' => 'Saint Paul',
+        'state_abbreviation' => 'MN',
+        'population' => 300000,
+    ]);
+
+    mock(Geocodio::class, function ($mock) {
+        $mock->shouldReceive('reverse')->twice()->andReturn(
+            geocodioReverseResponse(),
+            geocodioReverseResponse([], ['city' => 'Saint Paul']),
+        );
+        $mock->shouldReceive('distance')->once()->andReturn(geocodioDistanceResponse(11.0));
+    });
+
+    $picked = app(DestinationPicker::class)->pick($origin);
+
+    expect($picked->location->city->name)->toBe('Saint Paul');
+});
+
 it('rejects an address in a state the app has never seen', function () {
     createMinneapolis();
 

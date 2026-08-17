@@ -67,6 +67,19 @@ class DestinationPicker
                 continue;
             }
 
+            // The anchor exclusion keeps the search away from the origin, but
+            // a jitter near a boundary can still resolve back into the origin
+            // city itself; enforce the no-same-city invariant on the result.
+            if ($origin && $city->id === $origin->city_id) {
+                Log::info('DestinationPicker: rejected candidate', [
+                    'reason' => 'address resolved to the origin city',
+                    'city' => $anchor->name,
+                    'attempt' => $attempt,
+                ]);
+
+                continue;
+            }
+
             $drivingDistanceMiles = null;
 
             if ($origin) {
