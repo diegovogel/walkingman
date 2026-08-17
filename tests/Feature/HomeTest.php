@@ -4,6 +4,7 @@ use App\Models\City;
 use App\Models\Location;
 use App\Models\Trip;
 use Illuminate\Support\Carbon;
+use Livewire\Volt\Volt;
 
 test('the home page renders for guests', function () {
     $response = $this->get('/');
@@ -83,6 +84,29 @@ test('it stands him on the origin of a trip that has just departed', function ()
     $response = $this->get('/');
 
     $response->assertSee('margin-inline-start: 0%');
+});
+
+test('it walks him to the destination and announces his arrival on a page left open', function () {
+    $this->travelTo(Carbon::parse('2026-01-01 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => now()->subHour(),
+        'arrival' => now()->addHour(),
+    ]);
+
+    $page = Volt::test('home');
+
+    $page->assertSee('margin-inline-start: 50%')
+        ->assertSee('wire:poll.60s')
+        ->assertDontSee('Jack has arrived');
+
+    $this->travelTo(now()->addHours(2));
+
+    $page->call('$refresh')
+        ->assertSee('margin-inline-start: 100%')
+        ->assertSee('Jack has arrived! Reload the page to see his next trip.')
+        ->assertSee('0 miles remaining.')
+        ->assertDontSee('wire:poll');
 });
 
 test('it centers him on the page when he has no trip to walk', function () {

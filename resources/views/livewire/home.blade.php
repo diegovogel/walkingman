@@ -3,6 +3,7 @@
 use App\Models\Trip;
 use App\Services\LifetimeStats;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
@@ -10,12 +11,27 @@ new
 #[Layout('components.layouts.public')]
 #[Title('Walking Man')]
 class extends Component {
+    /**
+     * Held onto so that polling can watch this particular trip finish: once he
+     * arrives it stops being underway, and re-running that scope would drop the
+     * trip off the page rather than announce it. A trip that departs later needs
+     * the reload the arrival message asks for.
+     */
+    #[Locked]
+    public ?int $tripId = null;
+
+    public function mount(): void
+    {
+        $this->tripId = Trip::underway()->latest('departure')->value('id');
+    }
+
     public function with(): array
     {
-        $trip = Trip::underway()
-            ->with(['originLocation.city', 'destinationLocation.city'])
-            ->latest('departure')
-            ->first();
+        $trip = $this->tripId
+            ? Trip::withEndpoints()
+                ->with(['originLocation.city', 'destinationLocation.city'])
+                ->find($this->tripId)
+            : null;
 
         // The trip line labels two zones but shows one date, so read every date
         // in the first of them rather than in the app's own timezone.
@@ -28,6 +44,7 @@ class extends Component {
             // Where along the track he stands. With no trip to walk there is no
             // track either, and the midpoint leaves him centered on the page.
             'progressPercent' => $trip ? round($trip->progress() * 100, 2) : 50,
+            'hasArrived' => $trip?->hasArrived() ?? false,
             'milesRemaining' => $trip?->milesRemaining(),
             'timeRemaining' => $trip?->timeRemaining(),
             'departedOn' => $trip?->departedAt()->setTimezone($eastern),
@@ -37,7 +54,9 @@ class extends Component {
     }
 }; ?>
 
-<div class="flex w-full flex-1 flex-col items-center text-center">
+{{-- Polled so he keeps walking on a page left open. Once he arrives nothing
+     more can change without a reload, so the polling stops with him. --}}
+<div @if ($trip && ! $hasArrived) wire:poll.60s @endif class="flex w-full flex-1 flex-col items-center text-center">
     <flux:heading size="xl" level="1" class="uppercase tracking-widest">{{ __('Walking Man') }}</flux:heading>
 
     <flux:text class="mt-3 text-lg">{{ __('Where will he go next?') }}</flux:text>
@@ -82,6 +101,12 @@ class extends Component {
             </div>
         @endif
     </div>
+
+    @if ($hasArrived)
+        <flux:callout variant="success" class="mt-8">
+            <flux:callout.text>{{ __('Jack has arrived! Reload the page to see his next trip.') }}</flux:callout.text>
+        </flux:callout>
+    @endif
 
     @if ($trip)
         <flux:text class="mt-8">
