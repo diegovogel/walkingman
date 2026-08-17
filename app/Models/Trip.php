@@ -110,10 +110,13 @@ class Trip extends Model
 
     public static function calculateArrival(Location $origin, Location $destination, ?Carbon $departure = null): Carbon
     {
+        return self::arrivalAfterWalking(self::calculateDistance($origin, $destination), $departure);
+    }
+
+    public static function arrivalAfterWalking(float $miles, ?Carbon $departure = null): Carbon
+    {
         $departure = $departure ?? Carbon::now();
-        $distance = self::calculateDistance($origin, $destination);
-        $speed = config('app.walking_speed');
-        $hours = $distance / $speed;
+        $hours = $miles / config('app.walking_speed');
 
         return $departure->copy()->addHours($hours);
     }
