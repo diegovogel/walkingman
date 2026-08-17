@@ -21,6 +21,18 @@ it('should add the cities from the JSON file to the database', function () {
         ->and(City::first()->name)->toBe('New York');
 });
 
+it('should be idempotent when run twice', function () {
+    $this->seeder->shouldAllowMockingProtectedMethods()
+        ->shouldReceive('getFilePath')
+        ->twice()
+        ->andReturn(__DIR__.'/../../Fixtures/cities.json');
+
+    $this->seeder->run();
+    $this->seeder->run();
+
+    expect(City::count())->toBe(3);
+});
+
 it('should log an error if the JSON is invalid', function () {
     $this->seeder->shouldAllowMockingProtectedMethods()
         ->shouldReceive('getFilePath')

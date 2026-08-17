@@ -243,15 +243,6 @@
     "id": 1840021491
   },
   {
-    "city": "San Juan",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.3985,
-    "lng": -66.061,
-    "population": 1915105,
-    "id": 1630035577
-  },
-  {
     "city": "San Antonio",
     "state_id": "TX",
     "state_name": "Texas",
@@ -511,15 +502,6 @@
     "lng": -110.8787,
     "population": 875284,
     "id": 1840022101
-  },
-  {
-    "city": "Honolulu",
-    "state_id": "HI",
-    "state_name": "Hawaii",
-    "lat": 21.3294,
-    "lng": -157.846,
-    "population": 835291,
-    "id": 1840013305
   },
   {
     "city": "McAllen",
@@ -1350,15 +1332,6 @@
     "id": 1840019325
   },
   {
-    "city": "Anchorage",
-    "state_id": "AK",
-    "state_name": "Alaska",
-    "lat": 61.1508,
-    "lng": -149.1091,
-    "population": 292545,
-    "id": 1840023385
-  },
-  {
     "city": "The Woodlands",
     "state_id": "TX",
     "state_name": "Texas",
@@ -1546,15 +1519,6 @@
     "lng": -84.8771,
     "population": 262061,
     "id": 1840014887
-  },
-  {
-    "city": "Aguadilla",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.4382,
-    "lng": -67.1537,
-    "population": 260331,
-    "id": 1630035605
   },
   {
     "city": "Lubbock",
@@ -2448,15 +2412,6 @@
     "id": 1840015141
   },
   {
-    "city": "Bayam�n",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.3794,
-    "lng": -66.1635,
-    "population": 170028,
-    "id": 1630035622
-  },
-  {
     "city": "Palmdale",
     "state_id": "CA",
     "state_name": "California",
@@ -2934,15 +2889,6 @@
     "id": 1840003833
   },
   {
-    "city": "Carolina",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.4054,
-    "lng": -65.9792,
-    "population": 139735,
-    "id": 1630035637
-  },
-  {
     "city": "Gainesville",
     "state_id": "GA",
     "state_name": "Georgia",
@@ -3267,15 +3213,6 @@
     "id": 1840018496
   },
   {
-    "city": "Ponce",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.0127,
-    "lng": -66.6212,
-    "population": 124719,
-    "id": 1630023669
-  },
-  {
     "city": "Lehigh Acres",
     "state_id": "FL",
     "state_name": "Florida",
@@ -3292,15 +3229,6 @@
     "lng": -94.1718,
     "population": 123569,
     "id": 1840008881
-  },
-  {
-    "city": "Arecibo",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.4491,
-    "lng": -66.7387,
-    "population": 123499,
-    "id": 1630023566
   },
   {
     "city": "Kenosha",
@@ -3942,15 +3870,6 @@
     "id": 1840020108
   },
   {
-    "city": "Kailua",
-    "state_id": "HI",
-    "state_name": "Hawaii",
-    "lat": 21.392,
-    "lng": -157.7396,
-    "population": 106260,
-    "id": 1840023244
-  },
-  {
     "city": "El Cajon",
     "state_id": "CA",
     "state_name": "California",
@@ -4066,15 +3985,6 @@
     "lng": -117.3892,
     "population": 103799,
     "id": 1840020407
-  },
-  {
-    "city": "San Germ�n",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.0827,
-    "lng": -67.046,
-    "population": 103747,
-    "id": 1630023526
   },
   {
     "city": "Eau Claire",
@@ -4552,15 +4462,6 @@
     "lng": -97.416,
     "population": 93522,
     "id": 1840020423
-  },
-  {
-    "city": "Mayag�ez",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.2003,
-    "lng": -67.1397,
-    "population": 93426,
-    "id": 1630035520
   },
   {
     "city": "Fall River",
@@ -5391,15 +5292,6 @@
     "id": 1840003123
   },
   {
-    "city": "Yauco",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.0344,
-    "lng": -66.8615,
-    "population": 80307,
-    "id": 1630035600
-  },
-  {
     "city": "St. Joseph",
     "state_id": "MO",
     "state_name": "Missouri",
@@ -5823,15 +5715,6 @@
     "id": 1840000986
   },
   {
-    "city": "Fajardo",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.3331,
-    "lng": -65.6589,
-    "population": 75549,
-    "id": 1630035668
-  },
-  {
     "city": "Davis",
     "state_id": "CA",
     "state_name": "California",
@@ -5911,15 +5794,6 @@
     "lng": -78.1746,
     "population": 74593,
     "id": 1840001623
-  },
-  {
-    "city": "Caguas",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.2319,
-    "lng": -66.0388,
-    "population": 74502,
-    "id": 1630023540
   },
   {
     "city": "Ellicott City",
@@ -6165,15 +6039,6 @@
     "id": 1840002467
   },
   {
-    "city": "Juana D�az",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.0532,
-    "lng": -66.5044,
-    "population": 71759,
-    "id": 1630023583
-  },
-  {
     "city": "Mansfield",
     "state_id": "TX",
     "state_name": "Texas",
@@ -6289,15 +6154,6 @@
     "lng": -74.1158,
     "population": 70553,
     "id": 1840003595
-  },
-  {
-    "city": "Guaynabo",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.3832,
-    "lng": -66.1134,
-    "population": 70542,
-    "id": 1630023575
   },
   {
     "city": "Rocklin",
@@ -6442,15 +6298,6 @@
     "lng": -84.112,
     "population": 69440,
     "id": 1840002785
-  },
-  {
-    "city": "Florida",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 18.3643,
-    "lng": -66.5611,
-    "population": 69427,
-    "id": 1630023648
   },
   {
     "city": "Lakeville",
@@ -6966,15 +6813,6 @@
     "id": 1840002423
   },
   {
-    "city": "Guayama",
-    "state_id": "PR",
-    "state_name": "Puerto Rico",
-    "lat": 17.9743,
-    "lng": -66.1104,
-    "population": 65343,
-    "id": 1630035675
-  },
-  {
     "city": "Alpharetta",
     "state_id": "GA",
     "state_name": "Georgia",
@@ -7027,15 +6865,6 @@
     "lng": -92.2371,
     "population": 64444,
     "id": 1840014632
-  },
-  {
-    "city": "Fairbanks",
-    "state_id": "AK",
-    "state_name": "Alaska",
-    "lat": 64.8353,
-    "lng": -147.6533,
-    "population": 64160,
-    "id": 1840023463
   },
   {
     "city": "Florence-Graham",
@@ -8719,15 +8548,6 @@
     "lng": -110.8838,
     "population": 50096,
     "id": 1840018110
-  },
-  {
-    "city": "East Honolulu",
-    "state_id": "HI",
-    "state_name": "Hawaii",
-    "lat": 21.2975,
-    "lng": -157.7211,
-    "population": 50076,
-    "id": 1840039181
   },
   {
     "city": "Draper",

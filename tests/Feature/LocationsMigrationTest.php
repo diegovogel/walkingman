@@ -13,7 +13,10 @@ test('the locations migration rolls back and re-applies without losing city asso
         'destination_location_id' => $destination->id,
     ]);
 
-    $this->artisan('migrate:rollback', ['--step' => 2])->assertSuccessful();
+    $this->artisan('migrate:rollback', ['--path' => [
+        'database/migrations/2026_08_15_032035_replace_trip_cities_with_locations.php',
+        'database/migrations/2026_08_15_032035_create_locations_table.php',
+    ]])->assertSuccessful();
 
     $rolledBack = DB::table('trips')->where('id', $trip->id)->first();
 

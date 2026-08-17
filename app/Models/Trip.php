@@ -40,6 +40,19 @@ class Trip extends Model
     }
 
     /**
+     * Trips whose origin and destination locations both still exist. Deleting
+     * a location nulls the trip's FK, and such a trip can no longer be walked
+     * or rendered.
+     */
+    #[Scope]
+    protected function withEndpoints(Builder $query): void
+    {
+        $query
+            ->whereNotNull('origin_location_id')
+            ->whereNotNull('destination_location_id');
+    }
+
+    /**
      * Trips the walking man has already arrived from. Arrival is nullable, and
      * a trip without one has no way to be finished.
      */
@@ -50,13 +63,17 @@ class Trip extends Model
     }
 
     /**
-     * The trip he is walking right now. A null arrival never compares true, so
-     * it is excluded here as well.
+     * The trip he is walking right now: departed, not yet arrived, endpoints
+     * intact. A null arrival never compares true, so it is excluded here as
+     * well.
      */
     #[Scope]
     protected function underway(Builder $query): void
     {
-        $query->where('departure', '<=', now())->where('arrival', '>=', now());
+        $query
+            ->withEndpoints()
+            ->where('departure', '<=', now())
+            ->where('arrival', '>=', now());
     }
 
     public function departedAt(): Carbon
@@ -132,10 +149,13 @@ class Trip extends Model
 
     public static function calculateArrival(Location $origin, Location $destination, ?Carbon $departure = null): Carbon
     {
+        return self::arrivalAfterWalking(self::calculateDistance($origin, $destination), $departure);
+    }
+
+    public static function arrivalAfterWalking(float $miles, ?Carbon $departure = null): Carbon
+    {
         $departure = $departure ?? Carbon::now();
-        $distance = self::calculateDistance($origin, $destination);
-        $speed = config('app.walking_speed');
-        $hours = $distance / $speed;
+        $hours = $miles / config('app.walking_speed');
 
         return $departure->copy()->addHours($hours);
     }

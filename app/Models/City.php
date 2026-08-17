@@ -15,5 +15,15 @@ class City extends Model
         'state_name',
         'latitude',
         'longitude',
+        'population',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'float',
+            'longitude' => 'float',
+            'population' => 'integer',
+        ];
+    }
 }
