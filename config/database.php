@@ -57,6 +57,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // The app writes UTC, so the session has to read it as UTC. Left on
+            // SYSTEM, MySQL takes each UTC string as local time and rejects the
+            // ones falling in a spring-forward gap, which no hour of the year
+            // should be able to do to a trip.
+            'timezone' => '+00:00',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -77,6 +82,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone' => '+00:00',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

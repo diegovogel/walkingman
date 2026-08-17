@@ -118,7 +118,7 @@ test('it reads the arrival date in the timezone it labels', function () {
         ->assertDontSee('8/15/26');
 });
 
-test('it does not show the play button, leaderboard link, or lifetime stats', function () {
+test('it does not show the play button or leaderboard link', function () {
     Trip::factory()->create([
         'departure' => now()->subDays(10),
         'arrival' => now()->addDays(2),
@@ -127,7 +127,134 @@ test('it does not show the play button, leaderboard link, or lifetime stats', fu
     $response = $this->get('/');
 
     $response->assertDontSee('PLAY')
-        ->assertDontSee('Leaderboard')
+        ->assertDontSee('Leaderboard');
+});
+
+test('it hides lifetime stats until a trip has been completed', function () {
+    Trip::factory()->create([
+        'departure' => now()->subDays(10),
+        'arrival' => now()->addDays(2),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertOk()
+        ->assertDontSee('Lifetime stats')
         ->assertDontSee('trips completed')
         ->assertDontSee('miles walked');
+});
+
+test('it counts completed trips and the miles they covered', function () {
+    Trip::factory()->create([
+        'departure' => now()->subDays(20),
+        'arrival' => now()->subDays(15),
+        'distance' => 1200.50,
+    ]);
+
+    Trip::factory()->create([
+        'departure' => now()->subDays(15),
+        'arrival' => now()->subDays(10),
+        'distance' => 800.25,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('Lifetime stats')
+        ->assertSee('2 trips completed.')
+        ->assertSee('2,001 miles walked.');
+});
+
+test('it leaves the trip underway out of the lifetime stats', function () {
+    Trip::factory()->create([
+        'departure' => now()->subDays(20),
+        'arrival' => now()->subDays(15),
+        'distance' => 500,
+    ]);
+
+    Trip::factory()->create([
+        'departure' => now()->subDay(),
+        'arrival' => now()->addDays(3),
+        'distance' => 9000,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('1 trip completed.')
+        ->assertSee('500 miles walked.');
+});
+
+test('it counts each city and state visited once', function () {
+    $minneapolis = City::factory()->create(['name' => 'Minneapolis', 'state_abbreviation' => 'MN']);
+    $dallas = City::factory()->create(['name' => 'Dallas', 'state_abbreviation' => 'TX']);
+
+    $first = Location::factory()->for($minneapolis)->create();
+    $second = Location::factory()->for($dallas)->create();
+    $third = Location::factory()->for($minneapolis)->create();
+
+    Trip::factory()->create([
+        'origin_location_id' => $first,
+        'destination_location_id' => $second,
+        'departure' => now()->subDays(20),
+        'arrival' => now()->subDays(15),
+    ]);
+
+    Trip::factory()->create([
+        'origin_location_id' => $second,
+        'destination_location_id' => $third,
+        'departure' => now()->subDays(15),
+        'arrival' => now()->subDays(10),
+    ]);
+
+    $response = $this->get('/');
+
+    // Three addresses, but Minneapolis is visited twice and counted once.
+    $response->assertSee('2 cities in 2 states visited.');
+});
+
+test('it measures time walking from the first departure', function () {
+    $this->travelTo(Carbon::parse('2026-08-15 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => Carbon::parse('2021-02-14 12:00:00'),
+        'arrival' => Carbon::parse('2021-02-20 12:00:00'),
+    ]);
+
+    $response = $this->get('/');
+
+    // Five whole years to 2/14/26, then 182 days on top of that.
+    $response->assertSee('5 years, 182 days walking.');
+});
+
+test('it drops the years from the time walking during the first one', function () {
+    $this->travelTo(Carbon::parse('2026-08-15 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => Carbon::parse('2026-08-03 12:00:00'),
+        'arrival' => Carbon::parse('2026-08-04 12:00:00'),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('12 days walking.')
+        ->assertDontSee('0 years');
+});
+
+test('it uses singular copy throughout when every count is one', function () {
+    $this->travelTo(Carbon::parse('2026-08-15 12:00:00'));
+
+    $city = City::factory()->create(['state_abbreviation' => 'MN']);
+
+    Trip::factory()->create([
+        'origin_location_id' => Location::factory()->for($city),
+        'destination_location_id' => Location::factory()->for($city),
+        'departure' => Carbon::parse('2025-08-14 12:00:00'),
+        'arrival' => Carbon::parse('2025-08-15 12:00:00'),
+        'distance' => 12,
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('1 trip completed.')
+        ->assertSee('1 year, 1 day walking.')
+        ->assertSee('1 city in 1 state visited.');
 });
