@@ -6,8 +6,10 @@
 can work in parallel. Each env is a git worktree at `.claude/worktrees/<name>`
 with CoW-cloned `vendor` and `node_modules`, its own `.env` with a unique port
 set, and a logs dir. Each env also gets its own MySQL schema
-`walkingman_<name>` on Herd's shared server, plus a queue worker (the queue and
-cache both use the `database` driver, so the per-env schema isolates them too).
+`walkingman_<name>` (dashes become underscores, so `lifetime-stats` lands in
+`walkingman_lifetime_stats`) on Herd's shared server, plus a queue worker (the
+queue and cache both use the `database` driver, so the per-env schema isolates
+them too).
 
 - **Create your own env mid-session**: `EnterWorktree` with a task-derived name,
   then `./scripts/agent-env.sh provision`. Or adopt a pre-built env via
@@ -57,6 +59,34 @@ cache both use the `database` driver, so the per-env schema isolates them too).
   gitignored, so `-x` would delete them all.
 - **Branch naming is automatic** (`worktree-<name>`); don't hand-rename env
   branches. `provision` owns and enforces the name.
+
+## Seeding and the walking speed
+
+- **How many trips `DatabaseSeeder` creates is not fixed.** It walks the chain from
+  two years back until one trip is still underway, so the count scales *with*
+  `WALKING_SPEED`: a faster walker finishes each leg sooner and needs more legs to
+  cover the two years. Roughly 30 trips at the `.env.example` value of 2, and
+  ~1,400 at 100. Raising the speed to make trips complete quickly during manual
+  testing is what makes `db:seed` slow and enormous, and the loop is deliberately
+  unbounded so it always ends on a trip in progress.
+- **`db:seed` is not trips-only.** It also creates 100 users, players, games, and
+  game results, so don't point it at an environment where that data would be
+  unwelcome.
+
+## Testing against MySQL
+
+The suite runs on in-memory SQLite (`phpunit.xml`), which has no session timezone
+and no `TIMESTAMP` conversion, so MySQL-specific behavior cannot be exercised by a
+normal `php artisan test`. Tests covering it are driver-gated and skip by default;
+run them against an env's own MySQL by overriding the connection, which beats
+`phpunit.xml` without editing it:
+
+```
+DB_CONNECTION=mysql php artisan test tests/Feature/DatabaseTimezoneTest.php
+```
+
+Note this runs `RefreshDatabase` against that env's schema and will drop whatever
+was seeded there.
 
 <laravel-boost-guidelines>
 === foundation rules ===
