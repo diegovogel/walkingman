@@ -265,15 +265,6 @@ class DestinationPicker
         $name = $components['city'];
         $stateAbbreviation = $components['state_province'] ?? $components['state'];
 
-        $city = City::query()
-            ->where('name', $name)
-            ->where('state_abbreviation', $stateAbbreviation)
-            ->first();
-
-        if ($city !== null) {
-            return $city;
-        }
-
         $stateName = City::query()->where('state_abbreviation', $stateAbbreviation)->value('state_name');
 
         if ($stateName === null) {
@@ -284,9 +275,10 @@ class DestinationPicker
             return null;
         }
 
-        return City::create([
+        return City::firstOrCreate([
             'name' => $name,
             'state_abbreviation' => $stateAbbreviation,
+        ], [
             'state_name' => $stateName,
             'latitude' => $addressLocation['lat'],
             'longitude' => $addressLocation['lng'],

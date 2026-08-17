@@ -46,7 +46,7 @@ class CitySeeder extends Seeder
             ];
         })->toArray();
 
-        City::insert($cityData);
+        City::upsert($cityData, ['name', 'state_abbreviation'], ['state_name', 'latitude', 'longitude', 'population']);
 
         Log::info('CitySeeder: '.count($cityData).' cities inserted');
     }

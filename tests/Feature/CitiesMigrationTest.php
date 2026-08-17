@@ -2,6 +2,7 @@
 
 use App\Models\City;
 use App\Models\Location;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 test('the population migration backfills existing cities from the seed data', function () {
@@ -36,6 +37,23 @@ test('the population migration backfills existing cities from the seed data', fu
 
     expect(City::where('name', 'New York')->value('population'))->toBe(18972871)
         ->and(City::where('name', 'Faketown')->value('population'))->toBeNull();
+});
+
+test('the unique-city migration folds duplicate rows together and blocks new duplicates', function () {
+    $this->artisan('migrate:rollback', ['--path' => [
+        'database/migrations/2026_08_17_163751_add_unique_city_constraint_to_cities_table.php',
+    ]])->assertSuccessful();
+
+    $kept = City::factory()->create(['name' => 'Boston', 'state_abbreviation' => 'MA']);
+    $redundant = City::factory()->create(['name' => 'Boston', 'state_abbreviation' => 'MA']);
+    $location = Location::factory()->for($redundant)->create();
+
+    $this->artisan('migrate')->assertSuccessful();
+
+    expect(City::where('name', 'Boston')->count())->toBe(1)
+        ->and($location->fresh()->city_id)->toBe($kept->id)
+        ->and(fn () => City::factory()->create(['name' => 'Boston', 'state_abbreviation' => 'MA']))
+        ->toThrow(QueryException::class);
 });
 
 test('the non-contiguous cities migration removes previously seeded rows and their locations', function () {
