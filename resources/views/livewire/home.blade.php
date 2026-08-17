@@ -25,6 +25,9 @@ class extends Component {
         return [
             'trip' => $trip,
             'lifetimeStats' => LifetimeStats::compile(),
+            // Where along the track he stands. With no trip to walk there is no
+            // track either, and the midpoint leaves him centered on the page.
+            'progressPercent' => $trip ? round($trip->progress() * 100, 2) : 50,
             'milesRemaining' => $trip?->milesRemaining(),
             'timeRemaining' => $trip?->timeRemaining(),
             'departedOn' => $trip?->departedAt()->setTimezone($eastern),
@@ -39,16 +42,32 @@ class extends Component {
 
     <flux:text class="mt-3 text-lg">{{ __('Where will he go next?') }}</flux:text>
 
-    <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="mt-8 h-36 w-auto" />
+    <div class="mt-8 w-full [--jack-width:5.25rem]">
+        {{-- The track spans the two endpoint circles' centers, inset by half of
+             Jack, so that at either end of a trip his outer edge lines up with
+             the address beneath him. His spot on it is then a plain percentage. --}}
+        <div class="mx-[calc(var(--jack-width)/2)]">
+            <div @class(['flex w-(--jack-width) -translate-x-1/2 flex-col items-center', '-mb-1.5' => $trip])
+                style="margin-inline-start: {{ $progressPercent }}%">
+                <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="w-full" />
 
-    @if ($trip)
-        <div class="mt-8 w-full">
-            <div class="flex items-center gap-2">
-                <span class="size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
-                <span class="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-600"></span>
-                <span class="size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                @if ($trip)
+                    {{-- Meets the line 16px down: 10px in the clear, then 6px
+                         behind an endpoint circle when he is standing on one. --}}
+                    <span class="h-4 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+                @endif
             </div>
 
+            @if ($trip)
+                <div class="flex items-center gap-2">
+                    <span class="-ms-1.5 size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                    <span class="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-600"></span>
+                    <span class="-me-1.5 size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                </div>
+            @endif
+        </div>
+
+        @if ($trip)
             <div class="mt-3 flex items-start justify-between gap-6">
                 <div class="text-start">
                     <flux:text class="font-medium">{{ $trip->originLocation->full_address }}</flux:text>
@@ -61,8 +80,10 @@ class extends Component {
                     <flux:text size="sm" variant="subtle">{{ $arrivesEastern->format('G:i') }} ET / {{ $arrivesPacific->format('G:i') }} PT</flux:text>
                 </div>
             </div>
-        </div>
+        @endif
+    </div>
 
+    @if ($trip)
         <flux:text class="mt-8">
             {{ __(':miles miles remaining.', ['miles' => number_format($milesRemaining)]) }}<br />
             {{ __('Arriving in :days d, :hours h, :minutes m.', $timeRemaining) }}

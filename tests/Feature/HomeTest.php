@@ -59,6 +59,38 @@ test('it shows how far the walking man has left to go', function () {
         ->assertSee('Arriving in 2 d, 3 h, 4 m.');
 });
 
+test('it stands the walking man as far along the line as he has walked', function () {
+    $this->travelTo(Carbon::parse('2026-01-01 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => now()->subHours(18),
+        'arrival' => now()->addHours(6),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('margin-inline-start: 75%');
+});
+
+test('it stands him on the origin of a trip that has just departed', function () {
+    $this->travelTo(Carbon::parse('2026-01-01 12:00:00'));
+
+    Trip::factory()->create([
+        'departure' => now(),
+        'arrival' => now()->addDays(2),
+    ]);
+
+    $response = $this->get('/');
+
+    $response->assertSee('margin-inline-start: 0%');
+});
+
+test('it centers him on the page when he has no trip to walk', function () {
+    $response = $this->get('/');
+
+    $response->assertOk()->assertSee('margin-inline-start: 50%');
+});
+
 test('it shows the trip that is currently underway', function () {
     $underway = Trip::factory()->create([
         'departure' => now()->subDays(10),
