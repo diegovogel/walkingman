@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Game;
 use App\Models\GameResult;
 use App\Models\Player;
-use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -22,18 +21,11 @@ class DatabaseSeeder extends Seeder
             Player::factory()->create(['user_id' => $user->id]);
         }
 
-        // Create cities.
+        // Create cities, then the trips that travel between them.
         $this->call([
             CitySeeder::class,
+            TripSeeder::class,
         ]);
-
-        // Create trips, walking from two years back up to the one still
-        // underway. How many that takes depends on the walking speed.
-        $trip = Trip::factory()->departingAt(now()->subYears(2))->create();
-
-        while ($trip->arrivesAt()->isPast()) {
-            $trip = Trip::factory()->create();
-        }
 
         // Create anonymous players.
         Player::factory(10)->create();
