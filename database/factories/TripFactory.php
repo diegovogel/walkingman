@@ -59,6 +59,23 @@ class TripFactory extends Factory
     }
 
     /**
+     * Departs at the given moment rather than now, so a chain can be started in
+     * the past. Later trips follow on their own, each leaving when the one
+     * before it arrives.
+     */
+    public function departingAt(Carbon $departure): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'departure' => $departure,
+            'arrival' => Trip::calculateArrival(
+                $attributes['origin_location_id'],
+                $attributes['destination_location_id'],
+                $departure,
+            ),
+        ]);
+    }
+
+    /**
      * Builds a location in one of the seeded cities, generating a city of its
      * own only when none have been seeded.
      */

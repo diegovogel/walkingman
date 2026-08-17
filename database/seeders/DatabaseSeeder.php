@@ -27,9 +27,12 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
         ]);
 
-        // Create trips.
-        for ($i = 0; $i < 30; $i++) {
-            Trip::factory()->create();
+        // Create trips, walking from two years back up to the one still
+        // underway. How many that takes depends on the walking speed.
+        $trip = Trip::factory()->departingAt(now()->subYears(2))->create();
+
+        while ($trip->arrivesAt()->isPast()) {
+            $trip = Trip::factory()->create();
         }
 
         // Create anonymous players.
