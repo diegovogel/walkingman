@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Location;
 use App\Models\Trip;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 final readonly class LifetimeStats
 {
@@ -24,34 +24,30 @@ final readonly class LifetimeStats
      */
     public static function compile(): ?self
     {
-        $firstTrip = Trip::completed()->oldest('departure')->first();
+        $totals = Trip::completed()
+            ->selectRaw('count(*) as trips, coalesce(sum(distance), 0) as miles, min(departure) as first_departure')
+            ->toBase()
+            ->first();
 
-        if (! $firstTrip) {
+        if ((int) $totals->trips === 0) {
             return null;
         }
 
-        [$years, $days] = self::timeWalkingSince($firstTrip->departedAt());
+        // Aggregates arrive raw, around the model's casts: the decimal sum as a
+        // string on MySQL, the departure as whatever the column holds.
+        $firstDeparture = Carbon::parse($totals->first_departure);
+        $years = (int) $firstDeparture->diffInYears(now());
+
         $places = self::placesVisited();
 
         return new self(
-            tripsCompleted: Trip::completed()->count(),
-            // Decimal sums come back as strings on MySQL and floats on SQLite.
-            milesWalked: (float) Trip::completed()->sum('distance'),
+            tripsCompleted: (int) $totals->trips,
+            milesWalked: (float) $totals->miles,
             yearsWalking: $years,
-            daysWalking: $days,
+            daysWalking: (int) $firstDeparture->copy()->addYears($years)->diffInDays(now()),
             citiesVisited: $places['cities'],
             statesVisited: $places['states'],
         );
-    }
-
-    /**
-     * @return array{0: int, 1: int} Whole years, then the days left over.
-     */
-    private static function timeWalkingSince(CarbonInterface $start): array
-    {
-        $years = (int) $start->diffInYears(now());
-
-        return [$years, (int) $start->copy()->addYears($years)->diffInDays(now())];
     }
 
     /**
@@ -64,6 +60,7 @@ final readonly class LifetimeStats
     {
         $counts = Location::query()
             ->join('cities', 'cities.id', '=', 'locations.city_id')
+            // Grouped so that a later clause on this query cannot leak past the or.
             ->where(function (Builder $query): void {
                 $query->whereIn('locations.id', Trip::completed()->select('origin_location_id'))
                     ->orWhereIn('locations.id', Trip::completed()->select('destination_location_id'));
