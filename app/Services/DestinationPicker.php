@@ -285,6 +285,18 @@ class DestinationPicker
         ]);
     }
 
+    /**
+     * A destination chosen without calling Geocodio at all: a random city, taken
+     * at its own center. No driving distance comes back, so the caller falls to
+     * the straight line. Everything is real, just coarser than a street address.
+     */
+    public function pickCityCenter(?Location $origin = null): PickedDestination
+    {
+        $city = $this->randomCity(excluding: $origin?->city_id);
+
+        return new PickedDestination($this->cityCenterLocation($city), null);
+    }
+
     private function cityCenterFallback(City $city, ?Location $origin): PickedDestination
     {
         Log::warning('DestinationPicker: no deliverable address found, using the city center', [
@@ -292,19 +304,24 @@ class DestinationPicker
             'attempts' => self::MAX_ATTEMPTS,
         ]);
 
-        $location = Location::create([
-            'city_id' => $city->id,
-            'street_address' => null,
-            'postal_code' => null,
-            'latitude' => $city->latitude,
-            'longitude' => $city->longitude,
-        ])->setRelation('city', $city);
+        $location = $this->cityCenterLocation($city);
 
         $drivingDistanceMiles = $origin
             ? $this->drivingDistanceMiles($origin, $location->latitude, $location->longitude)
             : null;
 
         return new PickedDestination($location, $drivingDistanceMiles);
+    }
+
+    private function cityCenterLocation(City $city): Location
+    {
+        return Location::create([
+            'city_id' => $city->id,
+            'street_address' => null,
+            'postal_code' => null,
+            'latitude' => $city->latitude,
+            'longitude' => $city->longitude,
+        ])->setRelation('city', $city);
     }
 
     private function drivingDistanceMiles(Location $origin, float $latitude, float $longitude): ?float

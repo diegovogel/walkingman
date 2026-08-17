@@ -126,4 +126,9 @@ return [
     // The speed in MPH at which the walking man walks.
     'walking_speed' => env('WALKING_SPEED', 3),
 
+    // Whether TripSeeder geocodes a street address for every stop. Off by
+    // default so seeding stays offline and free; a backfill that wants real
+    // addresses turns it on for the one run.
+    'seed_geocoding' => env('SEED_GEOCODING', false),
+
 ];
