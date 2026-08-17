@@ -8,4 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('trip:next')->hourly()->withoutOverlapping();
+// Every minute, not hourly: the command departs the new trip at the moment it
+// runs, so its cadence is exactly how long the walking man stands still between
+// trips. It costs one exists() query to find a trip already underway and stop.
+Schedule::command('trip:next')->everyMinute()->withoutOverlapping();

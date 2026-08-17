@@ -4,9 +4,18 @@ use App\Models\Location;
 use App\Models\Trip;
 use App\Services\DestinationPicker;
 use App\Services\PickedDestination;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Carbon;
 
 use function Pest\Laravel\mock;
+
+it('is scheduled every minute so he never stands still for long', function () {
+    $scheduled = collect(app(Schedule::class)->events())
+        ->filter(fn ($event) => str_contains((string) $event->command, 'trip:next'));
+
+    expect($scheduled)->toHaveCount(1)
+        ->and($scheduled->first()->expression)->toBe('* * * * *');
+});
 
 it('does nothing while a trip is underway', function () {
     Trip::factory()->create([
