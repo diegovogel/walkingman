@@ -62,13 +62,20 @@ them too).
 
 ## Seeding and the walking speed
 
-- **How many trips `DatabaseSeeder` creates is not fixed.** It walks the chain from
-  two years back until one trip is still underway, so the count scales *with*
+- **How many trips `TripSeeder` creates is not fixed.** It walks the chain from two
+  years back until one trip is still underway, so the count scales *with*
   `WALKING_SPEED`: a faster walker finishes each leg sooner and needs more legs to
   cover the two years. Roughly 30 trips at the `.env.example` value of 2, and
   ~1,400 at 100. Raising the speed to make trips complete quickly during manual
-  testing is what makes `db:seed` slow and enormous, and the loop is deliberately
-  unbounded so it always ends on a trip in progress.
+  testing is what makes `db:seed` slow and enormous.
+- **It starts its own chain rather than continuing an existing one.** Seeding a
+  database that already holds trips leaves two disjoint chains, each ending in a
+  trip underway. Clear `trips` and `locations` first, remembering that `trip:next`
+  adds one on its own every hour.
+- **`SEED_GEOCODING=true` buys a real street address per stop**, at roughly two
+  Geocodio calls each. Left off, stops are city centers and seeding stays offline
+  and free, which is what local development wants. A production backfill wants it
+  on: `SEED_GEOCODING=true php artisan db:seed --class=TripSeeder --force`.
 - **`db:seed` is not trips-only.** It also creates 100 users, players, games, and
   game results, so don't point it at an environment where that data would be
   unwelcome.
