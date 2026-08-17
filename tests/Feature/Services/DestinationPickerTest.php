@@ -123,11 +123,68 @@ it('rejects unusable results and accepts a later attempt', function (array $badR
     'place (city centroid)' => [geocodioReverseResponse(['accuracy_type' => 'place'])],
     'nearest_rooftop_match below accuracy threshold' => [geocodioReverseResponse(['accuracy_type' => 'nearest_rooftop_match', 'accuracy' => 0.7])],
     'missing house number' => [geocodioReverseResponse([], ['number' => ''])],
-    'across the state line' => [geocodioReverseResponse([], ['state_province' => 'WI'])],
-    'across the city line within the state' => [geocodioReverseResponse([], ['city' => 'Richfield'])],
     'across the border in Canada' => [geocodioReverseResponse([], ['state_province' => 'ON', 'country' => 'CA'])],
+    'missing city component' => [geocodioReverseResponse([], ['city' => ''])],
     'empty result set' => [['results' => []]],
 ]);
+
+it('persists the municipality the address actually sits in, discovering it on first sight', function () {
+    $minneapolis = createMinneapolis();
+
+    mock(Geocodio::class, function ($mock) {
+        $mock->shouldReceive('reverse')->once()->andReturn(
+            geocodioReverseResponse([], ['city' => 'Richfield', 'postal_code' => '55423']),
+        );
+    });
+
+    $picked = app(DestinationPicker::class)->pick();
+
+    $richfield = City::where('name', 'Richfield')->first();
+
+    expect($richfield)->not->toBeNull()
+        ->and($richfield->state_abbreviation)->toBe('MN')
+        ->and($richfield->state_name)->toBe($minneapolis->state_name)
+        ->and($richfield->latitude)->toBe(44.9585)
+        ->and($richfield->longitude)->toBe(-93.2735)
+        ->and($picked->location->city_id)->toBe($richfield->id)
+        ->and($picked->location->full_address)->toBe('2400 Third Ave S, Richfield, MN 55423');
+});
+
+it('reuses the existing city row when the address matches one', function () {
+    createMinneapolis();
+    $saintPaul = City::factory()->create([
+        'name' => 'Saint Paul',
+        'state_abbreviation' => 'MN',
+        'population' => 300000,
+    ]);
+
+    mock(Geocodio::class, function ($mock) {
+        $mock->shouldReceive('reverse')->once()->andReturn(
+            geocodioReverseResponse([], ['city' => 'Saint Paul']),
+        );
+    });
+
+    $picked = app(DestinationPicker::class)->pick();
+
+    expect($picked->location->city_id)->toBe($saintPaul->id)
+        ->and(City::count())->toBe(2);
+});
+
+it('rejects an address in a state the app has never seen', function () {
+    createMinneapolis();
+
+    mock(Geocodio::class, function ($mock) {
+        $mock->shouldReceive('reverse')->twice()->andReturn(
+            geocodioReverseResponse([], ['state_province' => 'XQ']),
+            geocodioReverseResponse(),
+        );
+    });
+
+    $picked = app(DestinationPicker::class)->pick();
+
+    expect($picked->location->full_address)->toBe('2400 Third Ave S, Minneapolis, MN 55404')
+        ->and(City::where('state_abbreviation', 'XQ')->exists())->toBeFalse();
+});
 
 it('rejects a candidate with no driving route and accepts a later attempt', function () {
     createMinneapolis();

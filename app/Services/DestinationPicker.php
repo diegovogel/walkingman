@@ -40,22 +40,30 @@ class DestinationPicker
     public function __construct(private readonly Geocodio $geocodio) {}
 
     /**
-     * Picks a random street address in a random city (never the origin's own
-     * city), by reverse geocoding random points near the city's center. Falls
-     * back to the bare city center when no attempt yields a usable address, so
-     * a Geocodio outage still produces a walkable destination.
+     * Picks a random street address near a random city (never the origin's
+     * own city), by reverse geocoding random points around the city's center.
+     * The anchor city only steers the search; the persisted city is whichever
+     * municipality the address actually sits in. Falls back to the bare
+     * anchor-city center when no attempt yields a usable address, so a
+     * Geocodio outage still produces a walkable destination.
      */
     public function pick(?Location $origin = null): PickedDestination
     {
-        $city = $this->randomCity(excluding: $origin?->city_id);
-        $radiusMiles = $this->radiusFor($city);
+        $anchor = $this->randomCity(excluding: $origin?->city_id);
+        $radiusMiles = $this->radiusFor($anchor);
 
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
-            [$latitude, $longitude] = $this->jitter($city, $radiusMiles);
+            [$latitude, $longitude] = $this->jitter($anchor, $radiusMiles);
 
-            $candidate = $this->deliverableAddressAt($latitude, $longitude, $city, $attempt);
+            $candidate = $this->deliverableAddressAt($latitude, $longitude, $anchor, $attempt);
 
             if ($candidate === null) {
+                continue;
+            }
+
+            $city = $this->cityForAddress($candidate['address_components'], $candidate['location']);
+
+            if ($city === null) {
                 continue;
             }
 
@@ -71,7 +79,7 @@ class DestinationPicker
                 if ($drivingDistanceMiles === null) {
                     Log::info('DestinationPicker: rejected candidate', [
                         'reason' => 'no driving route from origin',
-                        'city' => $city->name,
+                        'city' => $anchor->name,
                         'attempt' => $attempt,
                     ]);
 
@@ -85,7 +93,7 @@ class DestinationPicker
             );
         }
 
-        return $this->cityCenterFallback($city, $origin);
+        return $this->cityCenterFallback($anchor, $origin);
     }
 
     private function randomCity(?int $excluding): City
@@ -143,17 +151,19 @@ class DestinationPicker
 
     /**
      * Reverse geocodes a point and returns the result only if it is a real,
-     * deliverable address inside the expected state.
+     * deliverable US address. The address may sit in a neighboring
+     * municipality; the anchor city is only a place to search near, and the
+     * persisted city comes from the address itself.
      *
      * @return array<string, mixed>|null
      */
-    private function deliverableAddressAt(float $latitude, float $longitude, City $city, int $attempt): ?array
+    private function deliverableAddressAt(float $latitude, float $longitude, City $anchor, int $attempt): ?array
     {
         try {
             $response = $this->geocodio->reverse("{$latitude},{$longitude}", limit: 1);
         } catch (GeocodioException $exception) {
             Log::warning('DestinationPicker: reverse geocode failed', [
-                'city' => $city->name,
+                'city' => $anchor->name,
                 'attempt' => $attempt,
                 'message' => $exception->getMessage(),
             ]);
@@ -162,12 +172,12 @@ class DestinationPicker
         }
 
         $result = $response['results'][0] ?? null;
-        $reason = $result === null ? 'no results' : $this->rejectionReason($result, $city);
+        $reason = $result === null ? 'no results' : $this->rejectionReason($result);
 
         if ($reason !== null) {
             Log::info('DestinationPicker: rejected candidate', [
                 'reason' => $reason,
-                'city' => $city->name,
+                'city' => $anchor->name,
                 'attempt' => $attempt,
             ]);
 
@@ -180,7 +190,7 @@ class DestinationPicker
     /**
      * @param  array<string, mixed>  $result
      */
-    private function rejectionReason(array $result, City $city): ?string
+    private function rejectionReason(array $result): ?string
     {
         $accuracyType = $result['accuracy_type'] ?? null;
         $components = $result['address_components'] ?? [];
@@ -197,19 +207,16 @@ class DestinationPicker
             return 'no house number';
         }
 
-        // The state check is the border guard: Geocodio also covers Canada and
-        // Mexico, and a point jittered across the border (Detroit/Windsor,
+        // The country check is the border guard: Geocodio also covers Canada
+        // and Mexico, and a point jittered across the border (Detroit/Windsor,
         // El Paso/Juarez) comes back as a high-confidence foreign address that
         // the accuracy checks alone would wave through.
-        if (($components['state_province'] ?? $components['state'] ?? null) !== $city->state_abbreviation) {
-            return 'address is outside the city\'s state';
+        if (($components['country'] ?? null) !== 'US') {
+            return 'address is outside the US';
         }
 
-        // The locality check keeps the stored city truthful: a jitter can land
-        // in a neighboring municipality, and labeling that street with the
-        // selected city would render a wrong full_address.
-        if (strcasecmp($components['city'] ?? '', $city->name) !== 0) {
-            return 'address is outside the selected city';
+        if (empty($components['city']) || empty($components['state_province'] ?? $components['state'] ?? null)) {
+            return 'address has no city or state component';
         }
 
         return null;
@@ -229,6 +236,48 @@ class DestinationPicker
             'latitude' => $candidate['location']['lat'],
             'longitude' => $candidate['location']['lng'],
         ])->setRelation('city', $city);
+    }
+
+    /**
+     * The city the address actually sits in, created on first sight when the
+     * jitter discovers a municipality the seed data does not carry. Discovered
+     * cities join the destination pool; their null population keeps them at
+     * the minimum search radius.
+     *
+     * @param  array<string, mixed>  $components
+     * @param  array{lat: float, lng: float}  $addressLocation
+     */
+    private function cityForAddress(array $components, array $addressLocation): ?City
+    {
+        $name = $components['city'];
+        $stateAbbreviation = $components['state_province'] ?? $components['state'];
+
+        $city = City::query()
+            ->where('name', $name)
+            ->where('state_abbreviation', $stateAbbreviation)
+            ->first();
+
+        if ($city !== null) {
+            return $city;
+        }
+
+        $stateName = City::query()->where('state_abbreviation', $stateAbbreviation)->value('state_name');
+
+        if ($stateName === null) {
+            Log::info('DestinationPicker: rejected candidate', [
+                'reason' => "unknown state '{$stateAbbreviation}'",
+            ]);
+
+            return null;
+        }
+
+        return City::create([
+            'name' => $name,
+            'state_abbreviation' => $stateAbbreviation,
+            'state_name' => $stateName,
+            'latitude' => $addressLocation['lat'],
+            'longitude' => $addressLocation['lng'],
+        ]);
     }
 
     private function cityCenterFallback(City $city, ?Location $origin): PickedDestination
