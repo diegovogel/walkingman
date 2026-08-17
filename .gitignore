@@ -28,3 +28,4 @@ yarn-error.log
 # all of .claude/ — committed project config lives there too.
 /logs
 /.claude/worktrees
+herd.yml
