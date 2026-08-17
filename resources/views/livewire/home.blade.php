@@ -41,9 +41,7 @@ class extends Component {
         return [
             'trip' => $trip,
             'lifetimeStats' => LifetimeStats::compile(),
-            // Where along the track he stands. With no trip to walk there is no
-            // track either, and the midpoint leaves him centered on the page.
-            'progressPercent' => $trip ? round($trip->progress() * 100, 2) : 50,
+            'progressPercent' => $trip ? round($trip->progress() * 100, 2) : null,
             'hasArrived' => $trip?->hasArrived() ?? false,
             'milesRemaining' => $trip?->milesRemaining(),
             'timeRemaining' => $trip?->timeRemaining(),
@@ -56,37 +54,35 @@ class extends Component {
 
 {{-- Polled so he keeps walking on a page left open. Once he arrives nothing
      more can change without a reload, so the polling stops with him. --}}
-<div @if ($trip && ! $hasArrived) wire:poll.60s @endif class="flex w-full flex-1 flex-col items-center text-center">
+<div @if ($trip && ! $hasArrived) wire:poll.60s @endif class="flex w-full flex-1 flex-col items-center text-center [--jack-width:5.25rem]">
     <flux:heading size="xl" level="1" class="uppercase tracking-widest">{{ __('Walking Man') }}</flux:heading>
 
     <flux:text class="mt-3 text-lg">{{ __('Where will he go next?') }}</flux:text>
 
-    <div class="mt-8 w-full [--jack-width:5.25rem]">
-        {{-- The track spans the two endpoint circles' centers, inset by half of
-             Jack, so that at either end of a trip his outer edge lines up with
-             the address beneath him. His spot on it is then a plain percentage. --}}
-        <div class="mx-[calc(var(--jack-width)/2)]">
-            <div @class(['flex w-(--jack-width) -translate-x-1/2 flex-col items-center', '-mb-1.5' => $trip])
-                style="margin-inline-start: {{ $progressPercent }}%">
-                <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="w-full" />
+    @if ($trip)
+        <div class="mt-8 w-full">
+            {{-- The track spans the two endpoint circles' centers, inset by half of
+                 Jack, so that at either end of a trip his outer edge lines up with
+                 the address beneath him. His spot on it is then a plain percentage. --}}
+            <div class="mx-[calc(var(--jack-width)/2)]">
+                <div class="-mb-1.5 flex w-(--jack-width) -translate-x-1/2 flex-col items-center"
+                    style="margin-inline-start: {{ $progressPercent }}%">
+                    <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="w-full" />
 
-                @if ($trip)
                     {{-- Meets the line 16px down: 10px in the clear, then 6px
                          behind an endpoint circle when he is standing on one. --}}
                     <span class="h-4 w-px bg-zinc-300 dark:bg-zinc-600"></span>
-                @endif
+                </div>
+
+                {{-- Pulled out by half a circle so each one sits centered on its
+                     own end of the track. --}}
+                <div class="-mx-1.5 flex items-center gap-2">
+                    <span class="size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                    <span class="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-600"></span>
+                    <span class="size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                </div>
             </div>
 
-            @if ($trip)
-                <div class="flex items-center gap-2">
-                    <span class="-ms-1.5 size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
-                    <span class="flex-1 border-t border-dashed border-zinc-300 dark:border-zinc-600"></span>
-                    <span class="-me-1.5 size-3 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
-                </div>
-            @endif
-        </div>
-
-        @if ($trip)
             <div class="mt-3 flex items-start justify-between gap-6">
                 <div class="text-start">
                     <flux:text class="font-medium">{{ $trip->originLocation->full_address }}</flux:text>
@@ -99,20 +95,20 @@ class extends Component {
                     <flux:text size="sm" variant="subtle">{{ $arrivesEastern->format('G:i') }} ET / {{ $arrivesPacific->format('G:i') }} PT</flux:text>
                 </div>
             </div>
+        </div>
+
+        @if ($hasArrived)
+            <flux:callout variant="success" class="mt-8">
+                <flux:callout.text>{{ __('Jack has arrived! Reload the page to see his next trip.') }}</flux:callout.text>
+            </flux:callout>
         @endif
-    </div>
 
-    @if ($hasArrived)
-        <flux:callout variant="success" class="mt-8">
-            <flux:callout.text>{{ __('Jack has arrived! Reload the page to see his next trip.') }}</flux:callout.text>
-        </flux:callout>
-    @endif
-
-    @if ($trip)
         <flux:text class="mt-8">
             {{ __(':miles miles remaining.', ['miles' => number_format($milesRemaining)]) }}<br />
             {{ __('Arriving in :days d, :hours h, :minutes m.', $timeRemaining) }}
         </flux:text>
+    @else
+        <img src="{{ asset('images/walking-man.png') }}" alt="{{ __('The walking man sculpture') }}" class="mt-8 w-(--jack-width)" />
     @endif
 
     @if ($lifetimeStats)

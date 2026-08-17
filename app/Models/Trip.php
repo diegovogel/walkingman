@@ -122,7 +122,9 @@ class Trip extends Model
             return 1.0;
         }
 
-        return min(1.0, max(0.0, 1 - $this->minutesRemaining() / $total));
+        // minutesRemaining() already floors at zero, so only the far end, a trip
+        // still waiting to depart, can fall outside the range.
+        return max(0.0, 1 - $this->minutesRemaining() / $total);
     }
 
     public function hasArrived(): bool
