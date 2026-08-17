@@ -40,7 +40,7 @@ function pickerAlternating(string $method, ?float $drivingDistance = null): void
 
 it('should walk the chain from two years back up to the trip underway', function () {
     config(['app.walking_speed' => 2]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
     pickerAlternating('pickCityCenter');
 
     $this->seed(TripSeeder::class);
@@ -53,7 +53,7 @@ it('should walk the chain from two years back up to the trip underway', function
 
 it('should not reach for geocoding unless it is turned on', function () {
     config(['app.walking_speed' => 2]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
 
     mock(DestinationPicker::class, function ($mock) {
         $mock->shouldNotReceive('pick');
@@ -72,7 +72,7 @@ it('should not reach for geocoding unless it is turned on', function () {
 
 it('should geocode every stop once seed geocoding is turned on', function () {
     config(['app.walking_speed' => 2, 'app.seed_geocoding' => true]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
 
     mock(DestinationPicker::class, function ($mock) {
         $mock->shouldNotReceive('pickCityCenter');
@@ -94,7 +94,7 @@ it('should geocode every stop once seed geocoding is turned on', function () {
 
 it('should leave no gap between one trip arriving and the next departing', function () {
     config(['app.walking_speed' => 2]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
     pickerAlternating('pickCityCenter');
 
     $this->seed(TripSeeder::class);
@@ -114,7 +114,7 @@ it('should leave no gap between one trip arriving and the next departing', funct
 
 it('should record every trip as randomly chosen rather than user chosen', function () {
     config(['app.walking_speed' => 2]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
     pickerAlternating('pickCityCenter');
 
     $this->seed(TripSeeder::class);
@@ -130,7 +130,7 @@ it('should record every trip as randomly chosen rather than user chosen', functi
 
 it('should walk the straight line when no driving distance comes back', function () {
     config(['app.walking_speed' => 2]);
-    City::factory()->create();
+    City::factory()->count(2)->create();
     pickerAlternating('pickCityCenter');
 
     $this->seed(TripSeeder::class);
@@ -141,6 +141,18 @@ it('should walk the straight line when no driving distance comes back', function
     expect(round((float) $first->distance, 2))->toBe($expected);
 });
 
+it('should refuse to run when only one city has been seeded', function () {
+    // The real picker here, not a double: every destination excludes the
+    // origin's own city, so one city can never yield a second stop.
+    City::factory()->create();
+
+    expect(fn () => $this->seed(TripSeeder::class))
+        ->toThrow(RuntimeException::class, 'at least two cities');
+
+    expect(Trip::count())->toBe(0)
+        ->and(Location::count())->toBe(0);
+});
+
 it('should refuse to run before any cities are seeded', function () {
     mock(DestinationPicker::class, function ($mock) {
         $mock->shouldNotReceive('pick');
@@ -148,7 +160,8 @@ it('should refuse to run before any cities are seeded', function () {
     });
 
     expect(fn () => $this->seed(TripSeeder::class))
-        ->toThrow(RuntimeException::class, 'Seed cities first');
+        ->toThrow(RuntimeException::class, 'at least two cities');
 
-    expect(Trip::count())->toBe(0);
+    expect(Trip::count())->toBe(0)
+        ->and(Location::count())->toBe(0);
 });

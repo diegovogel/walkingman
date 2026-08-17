@@ -29,8 +29,10 @@ class TripSeeder extends Seeder
      */
     public function run(DestinationPicker $picker): void
     {
-        if (City::query()->doesntExist()) {
-            throw new RuntimeException('Seed cities first: php artisan db:seed --class='.CitySeeder::class);
+        // Two, not one: every destination excludes the city it departs from, so
+        // a lone city leaves the walking man with nowhere to go.
+        if (City::query()->count() < 2) {
+            throw new RuntimeException('Seed at least two cities first: php artisan db:seed --class='.CitySeeder::class);
         }
 
         $pick = config('app.seed_geocoding')
