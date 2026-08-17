@@ -51,7 +51,7 @@ class CreateNextTrip extends Command
             'destination_is_random' => true,
         ]);
 
-        $this->info("Next trip: {$destination->location->full_address} ({$distance} miles).");
+        $this->info(sprintf('Next trip: %s (%s miles).', $destination->location->full_address, number_format($distance, 1)));
 
         return self::SUCCESS;
     }
