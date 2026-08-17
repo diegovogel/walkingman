@@ -25,6 +25,7 @@ class CreateNextTrip extends Command
         }
 
         $previousTrip = Trip::query()
+            ->completed()
             ->whereNotNull('destination_location_id')
             ->orderByDesc('arrival')
             ->orderByDesc('id')

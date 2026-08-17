@@ -30,7 +30,6 @@ class TripFactory extends Factory
         $destinationLocation = $this->locationInRandomCity(excluding: $originLocation->city_id);
 
         $distance = Trip::calculateDistance($originLocation, $destinationLocation);
-        $arrival = Trip::calculateArrival($originLocation, $destinationLocation, $departure);
 
         $destinationCameFromUser = $this->faker->boolean();
 
@@ -47,7 +46,13 @@ class TripFactory extends Factory
         return [
             'distance' => $distance,
             'departure' => $departure,
-            'arrival' => $arrival,
+            // Resolved after any state has had its say, so that a state moving
+            // the departure gets an arrival to match without restating this.
+            'arrival' => fn (array $attributes) => Trip::calculateArrival(
+                $originLocation,
+                $destinationLocation,
+                $attributes['departure'],
+            ),
             'destination_from_user' => $destinationCameFromUser,
             'destination_is_random' => $this->faker->boolean(),
             'created_at' => Carbon::now(),
@@ -56,6 +61,16 @@ class TripFactory extends Factory
             'destination_location_id' => $destinationLocation,
             'user_id' => $user,
         ];
+    }
+
+    /**
+     * Departs at the given moment rather than now, so a chain can be started in
+     * the past. Later trips follow on their own, each leaving when the one
+     * before it arrives.
+     */
+    public function departingAt(Carbon $departure): static
+    {
+        return $this->state(['departure' => $departure]);
     }
 
     /**

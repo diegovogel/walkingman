@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,19 +44,33 @@ class Trip extends Model
      * a location nulls the trip's FK, and such a trip can no longer be walked
      * or rendered.
      */
-    public function scopeWithEndpoints(Builder $query): Builder
+    #[Scope]
+    protected function withEndpoints(Builder $query): void
     {
-        return $query
+        $query
             ->whereNotNull('origin_location_id')
             ->whereNotNull('destination_location_id');
     }
 
     /**
-     * Trips currently being walked: departed, not yet arrived, endpoints intact.
+     * Trips the walking man has already arrived from. Arrival is nullable, and
+     * a trip without one has no way to be finished.
      */
-    public function scopeUnderway(Builder $query): Builder
+    #[Scope]
+    protected function completed(Builder $query): void
     {
-        return $query
+        $query->whereNotNull('arrival')->where('arrival', '<=', now());
+    }
+
+    /**
+     * The trip he is walking right now: departed, not yet arrived, endpoints
+     * intact. A null arrival never compares true, so it is excluded here as
+     * well.
+     */
+    #[Scope]
+    protected function underway(Builder $query): void
+    {
+        $query
             ->withEndpoints()
             ->where('departure', '<=', now())
             ->where('arrival', '>=', now());

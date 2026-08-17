@@ -43,6 +43,21 @@ it('should create trips with a departure time equal to the arrival of the previo
         ->and($arrival2)->toBe($departure3);
 });
 
+it('should start the chain at a given moment in the past', function () {
+    config(['app.walking_speed' => 3]);
+    $departure = now()->subYears(2);
+
+    Trip::factory()->departingAt($departure)->create();
+    Trip::factory()->create();
+
+    $first = Trip::first();
+    $second = Trip::skip(1)->first();
+
+    expect($first->departedAt()->timestamp)->toBe($departure->timestamp)
+        ->and($first->arrivesAt()->isPast())->toBeTrue()
+        ->and($second->departure)->toBe($first->arrival);
+});
+
 it('should assign a user to all trips that came from a user', function () {
     for ($i = 0; $i < 30; $i++) {
         Trip::factory()->create();
