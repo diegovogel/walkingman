@@ -98,7 +98,7 @@ it('never picks a destination in the origin city', function () {
     ]);
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->andReturn(geocodioReverseResponse());
+        $mock->shouldReceive('reverse')->andReturn(geocodioReverseResponse([], ['city' => 'Saint Paul']));
         $mock->shouldReceive('distance')->andReturn(geocodioDistanceResponse());
     });
 
@@ -124,6 +124,7 @@ it('rejects unusable results and accepts a later attempt', function (array $badR
     'nearest_rooftop_match below accuracy threshold' => [geocodioReverseResponse(['accuracy_type' => 'nearest_rooftop_match', 'accuracy' => 0.7])],
     'missing house number' => [geocodioReverseResponse([], ['number' => ''])],
     'across the state line' => [geocodioReverseResponse([], ['state_province' => 'WI'])],
+    'across the city line within the state' => [geocodioReverseResponse([], ['city' => 'Richfield'])],
     'across the border in Canada' => [geocodioReverseResponse([], ['state_province' => 'ON', 'country' => 'CA'])],
     'empty result set' => [['results' => []]],
 ]);

@@ -205,6 +205,13 @@ class DestinationPicker
             return 'address is outside the city\'s state';
         }
 
+        // The locality check keeps the stored city truthful: a jitter can land
+        // in a neighboring municipality, and labeling that street with the
+        // selected city would render a wrong full_address.
+        if (strcasecmp($components['city'] ?? '', $city->name) !== 0) {
+            return 'address is outside the selected city';
+        }
+
         return null;
     }
 
