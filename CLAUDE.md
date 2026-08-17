@@ -80,6 +80,18 @@ them too).
   game results, so don't point it at an environment where that data would be
   unwelcome.
 
+## Geocodio
+
+- **Distance calls are enabled per API key in the Geocodio dashboard**, not by
+  code or config. A key without them geocodes normally while every driving
+  -distance lookup fails, and the app quietly falls back to straight-line
+  distance (a logged warning is the only symptom). When distances look ~20%
+  short across the board, check the key's dashboard toggles before the code.
+- One credit per lookup, 2,500 free per day. A trip costs a handful (reverse
+  geocodes plus one distance call per accepted stop), so only a full
+  `SEED_GEOCODING=true` reseed of two years of history spends a meaningful
+  number.
+
 ## Testing against MySQL
 
 The suite runs on in-memory SQLite (`phpunit.xml`), which has no session timezone
