@@ -17,6 +17,7 @@ class CityFactory extends Factory
             'state_name' => $this->faker->state(),
             'latitude' => $this->faker->latitude(),
             'longitude' => $this->faker->longitude(),
+            'population' => $this->faker->numberBetween(50000, 2000000),
         ];
     }
 }

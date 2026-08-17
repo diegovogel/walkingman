@@ -40,6 +40,7 @@ class CitySeeder extends Seeder
                 'state_name' => $city['state_name'],
                 'latitude' => $city['lat'],
                 'longitude' => $city['lng'],
+                'population' => $city['population'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
