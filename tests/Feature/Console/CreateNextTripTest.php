@@ -120,6 +120,47 @@ it('picks an origin as well when there are no trips yet', function () {
         ->and($trip->destination_location_id)->toBe($destination->id);
 });
 
+it('does nothing while an intact trip is still scheduled to depart', function () {
+    Trip::factory()->create([
+        'departure' => Carbon::now()->addDay(),
+        'arrival' => Carbon::now()->addDays(2),
+    ]);
+
+    mock(DestinationPicker::class, function ($mock) {
+        $mock->shouldNotReceive('pick');
+    });
+
+    $this->artisan('trip:next')->assertSuccessful();
+
+    expect(Trip::count())->toBe(1);
+});
+
+it('chains from the most recently arrived trip, not the highest id', function () {
+    $arrived = Trip::factory()->create([
+        'departure' => Carbon::now()->subDays(9),
+        'arrival' => Carbon::now()->subDays(2),
+    ]);
+
+    $ghost = Trip::factory()->create([
+        'departure' => Carbon::now()->subDays(2),
+        'arrival' => Carbon::now()->subDay(),
+    ]);
+    $ghost->update(['origin_location_id' => null, 'destination_location_id' => null]);
+
+    $destination = Location::factory()->create();
+
+    mock(DestinationPicker::class, function ($mock) use ($arrived, $destination) {
+        $mock->shouldReceive('pick')
+            ->once()
+            ->withArgs(fn (?Location $pickOrigin) => $pickOrigin?->id === $arrived->destination_location_id)
+            ->andReturn(new PickedDestination($destination, 640.0));
+    });
+
+    $this->artisan('trip:next')->assertSuccessful();
+
+    expect(Trip::latest('id')->first()->origin_location_id)->toBe($arrived->destination_location_id);
+});
+
 it('replaces a mid-window trip whose locations were removed', function () {
     $ghost = Trip::factory()->create([
         'departure' => Carbon::now()->subDay(),

@@ -16,13 +16,19 @@ class CreateNextTrip extends Command
 
     public function handle(DestinationPicker $picker): int
     {
-        if (Trip::query()->underway()->exists()) {
+        // A walkable trip that has not yet arrived, whether underway or still
+        // scheduled to depart, means a new one would overlap it.
+        if (Trip::query()->withEndpoints()->where('arrival', '>=', now())->exists()) {
             $this->info('A trip is already underway.');
 
             return self::SUCCESS;
         }
 
-        $previousTrip = Trip::query()->latest('id')->first();
+        $previousTrip = Trip::query()
+            ->whereNotNull('destination_location_id')
+            ->orderByDesc('arrival')
+            ->orderByDesc('id')
+            ->first();
         $origin = $previousTrip?->destinationLocation ?? $picker->pick()->location;
 
         $destination = $picker->pick($origin);
