@@ -16,7 +16,7 @@ class CreateNextTrip extends Command
 
     public function handle(DestinationPicker $picker): int
     {
-        if ($this->tripIsUnderway()) {
+        if (Trip::query()->underway()->exists()) {
             $this->info('A trip is already underway.');
 
             return self::SUCCESS;
@@ -41,7 +41,7 @@ class CreateNextTrip extends Command
         // walked the moment it is created.
         $departure = Carbon::now();
 
-        $trip = Trip::create([
+        Trip::create([
             'origin_location_id' => $origin->id,
             'destination_location_id' => $destination->location->id,
             'distance' => $distance,
@@ -51,16 +51,8 @@ class CreateNextTrip extends Command
             'destination_is_random' => true,
         ]);
 
-        $this->info("Next trip: {$trip->destinationLocation->full_address} ({$distance} miles).");
+        $this->info("Next trip: {$destination->location->full_address} ({$distance} miles).");
 
         return self::SUCCESS;
-    }
-
-    private function tripIsUnderway(): bool
-    {
-        return Trip::query()
-            ->where('departure', '<=', now())
-            ->where('arrival', '>=', now())
-            ->exists();
     }
 }

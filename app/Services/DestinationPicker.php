@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\GeocodioAccuracyType;
 use App\Models\City;
 use App\Models\Location;
 use Geocodio\Enums\DistanceMode;
@@ -16,7 +15,21 @@ class DestinationPicker
 {
     private const MAX_ATTEMPTS = 5;
 
+    /**
+     * Accuracy types precise enough to trust as a real, deliverable street
+     * address. Notably absent: nearest_street, where Geocodio estimates a
+     * house number, producing a fabricated address that looks real.
+     */
+    private const DELIVERABLE_ACCURACY_TYPES = [
+        'rooftop',
+        'point',
+        'range_interpolation',
+        'nearest_rooftop_match',
+    ];
+
     private const MINIMUM_ACCURACY = 0.8;
+
+    private const RADIUS_MILES_PER_SQRT_POPULATION = 0.011;
 
     private const MIN_RADIUS_MILES = 1.5;
 
@@ -93,11 +106,10 @@ class DestinationPicker
      */
     private function radiusFor(City $city): float
     {
-        if ($city->population === null) {
-            return self::MIN_RADIUS_MILES;
-        }
-
-        return min(max(0.011 * sqrt($city->population), self::MIN_RADIUS_MILES), self::MAX_RADIUS_MILES);
+        return min(
+            max(self::RADIUS_MILES_PER_SQRT_POPULATION * sqrt($city->population ?? 0), self::MIN_RADIUS_MILES),
+            self::MAX_RADIUS_MILES,
+        );
     }
 
     /**
@@ -173,7 +185,7 @@ class DestinationPicker
         $accuracyType = $result['accuracy_type'] ?? null;
         $components = $result['address_components'] ?? [];
 
-        if (! in_array($accuracyType, GeocodioAccuracyType::deliverable(), true)) {
+        if (! in_array($accuracyType, self::DELIVERABLE_ACCURACY_TYPES, true)) {
             return "accuracy_type '{$accuracyType}' is not a deliverable address";
         }
 
@@ -209,7 +221,7 @@ class DestinationPicker
             'postal_code' => $components['postal_code'] ?? $components['zip'] ?? null,
             'latitude' => $candidate['location']['lat'],
             'longitude' => $candidate['location']['lng'],
-        ]);
+        ])->setRelation('city', $city);
     }
 
     private function cityCenterFallback(City $city, ?Location $origin): PickedDestination
@@ -225,7 +237,7 @@ class DestinationPicker
             'postal_code' => null,
             'latitude' => $city->latitude,
             'longitude' => $city->longitude,
-        ]);
+        ])->setRelation('city', $city);
 
         $drivingDistanceMiles = $origin
             ? $this->drivingDistanceMiles($origin, $location->latitude, $location->longitude)

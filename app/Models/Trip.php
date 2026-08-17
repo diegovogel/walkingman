@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,16 @@ class Trip extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Trips currently being walked: departed, but not yet arrived.
+     */
+    public function scopeUnderway(Builder $query): Builder
+    {
+        return $query
+            ->where('departure', '<=', now())
+            ->where('arrival', '>=', now());
     }
 
     public function departedAt(): Carbon

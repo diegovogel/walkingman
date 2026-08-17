@@ -15,8 +15,7 @@ class extends Component {
             ->with(['originLocation.city', 'destinationLocation.city'])
             ->whereNotNull('origin_location_id')
             ->whereNotNull('destination_location_id')
-            ->where('departure', '<=', now())
-            ->where('arrival', '>=', now())
+            ->underway()
             ->latest('departure')
             ->first();
 

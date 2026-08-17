@@ -57,7 +57,7 @@ it('departs now and derives the arrival from the driving distance', function () 
     Carbon::setTestNow('2026-08-17 12:00:00');
     config(['app.walking_speed' => 3]);
 
-    $previousTrip = Trip::factory()->create([
+    Trip::factory()->create([
         'departure' => Carbon::now()->subDays(20),
         'arrival' => Carbon::now()->subDays(3),
     ]);

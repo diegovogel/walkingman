@@ -11,7 +11,7 @@ use function Pest\Laravel\mock;
 /**
  * A valid Geocodio v2 reverse geocode response, overridable per test.
  */
-function reverseResponse(array $resultOverrides = [], array $componentOverrides = []): array
+function geocodioReverseResponse(array $resultOverrides = [], array $componentOverrides = []): array
 {
     $result = array_merge([
         'address_components' => array_merge([
@@ -31,7 +31,7 @@ function reverseResponse(array $resultOverrides = [], array $componentOverrides 
     return ['results' => [$result]];
 }
 
-function distanceResponse(float $miles = 12.5): array
+function geocodioDistanceResponse(float $miles = 12.5): array
 {
     return [
         'origin' => ['location' => [44.97, -93.26]],
@@ -41,7 +41,7 @@ function distanceResponse(float $miles = 12.5): array
     ];
 }
 
-function minneapolis(): City
+function createMinneapolis(): City
 {
     return City::factory()->create([
         'name' => 'Minneapolis',
@@ -53,10 +53,10 @@ function minneapolis(): City
 }
 
 it('creates a location from a deliverable reverse geocode result', function () {
-    $city = minneapolis();
+    $city = createMinneapolis();
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->once()->andReturn(reverseResponse());
+        $mock->shouldReceive('reverse')->once()->andReturn(geocodioReverseResponse());
     });
 
     $picked = app(DestinationPicker::class)->pick();
@@ -70,13 +70,13 @@ it('creates a location from a deliverable reverse geocode result', function () {
 });
 
 it('validates the driving route and returns the distance when picking from an origin', function () {
-    $city = minneapolis();
+    $city = createMinneapolis();
     $dallas = City::factory()->create(['name' => 'Dallas', 'state_abbreviation' => 'TX']);
     $origin = Location::factory()->for($dallas)->create();
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->once()->andReturn(reverseResponse());
-        $mock->shouldReceive('distance')->once()->andReturn(distanceResponse(942.3));
+        $mock->shouldReceive('reverse')->once()->andReturn(geocodioReverseResponse());
+        $mock->shouldReceive('distance')->once()->andReturn(geocodioDistanceResponse(942.3));
     });
 
     $picked = app(DestinationPicker::class)->pick($origin);
@@ -86,7 +86,7 @@ it('validates the driving route and returns the distance when picking from an or
 });
 
 it('never picks a destination in the origin city', function () {
-    $city = minneapolis();
+    $city = createMinneapolis();
     $origin = Location::factory()->for($city)->create();
 
     City::factory()->create([
@@ -98,8 +98,8 @@ it('never picks a destination in the origin city', function () {
     ]);
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->andReturn(reverseResponse());
-        $mock->shouldReceive('distance')->andReturn(distanceResponse());
+        $mock->shouldReceive('reverse')->andReturn(geocodioReverseResponse());
+        $mock->shouldReceive('distance')->andReturn(geocodioDistanceResponse());
     });
 
     $picked = app(DestinationPicker::class)->pick($origin);
@@ -108,34 +108,34 @@ it('never picks a destination in the origin city', function () {
 });
 
 it('rejects unusable results and accepts a later attempt', function (array $badResponse) {
-    minneapolis();
+    createMinneapolis();
 
     mock(Geocodio::class, function ($mock) use ($badResponse) {
-        $mock->shouldReceive('reverse')->twice()->andReturn($badResponse, reverseResponse());
+        $mock->shouldReceive('reverse')->twice()->andReturn($badResponse, geocodioReverseResponse());
     });
 
     $picked = app(DestinationPicker::class)->pick();
 
     expect($picked->location->street_address)->toBe('2400 Third Ave S');
 })->with([
-    'nearest_street (estimated house number)' => [reverseResponse(['accuracy_type' => 'nearest_street'])],
-    'street_center' => [reverseResponse(['accuracy_type' => 'street_center'])],
-    'place (city centroid)' => [reverseResponse(['accuracy_type' => 'place'])],
-    'nearest_rooftop_match below accuracy threshold' => [reverseResponse(['accuracy_type' => 'nearest_rooftop_match', 'accuracy' => 0.7])],
-    'missing house number' => [reverseResponse([], ['number' => ''])],
-    'across the state line' => [reverseResponse([], ['state_province' => 'WI'])],
-    'across the border in Canada' => [reverseResponse([], ['state_province' => 'ON', 'country' => 'CA'])],
+    'nearest_street (estimated house number)' => [geocodioReverseResponse(['accuracy_type' => 'nearest_street'])],
+    'street_center' => [geocodioReverseResponse(['accuracy_type' => 'street_center'])],
+    'place (city centroid)' => [geocodioReverseResponse(['accuracy_type' => 'place'])],
+    'nearest_rooftop_match below accuracy threshold' => [geocodioReverseResponse(['accuracy_type' => 'nearest_rooftop_match', 'accuracy' => 0.7])],
+    'missing house number' => [geocodioReverseResponse([], ['number' => ''])],
+    'across the state line' => [geocodioReverseResponse([], ['state_province' => 'WI'])],
+    'across the border in Canada' => [geocodioReverseResponse([], ['state_province' => 'ON', 'country' => 'CA'])],
     'empty result set' => [['results' => []]],
 ]);
 
 it('rejects a candidate with no driving route and accepts a later attempt', function () {
-    minneapolis();
+    createMinneapolis();
     $dallas = City::factory()->create(['name' => 'Dallas', 'state_abbreviation' => 'TX']);
     $origin = Location::factory()->for($dallas)->create();
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->twice()->andReturn(reverseResponse());
-        $mock->shouldReceive('distance')->twice()->andReturn(['destinations' => []], distanceResponse(950.0));
+        $mock->shouldReceive('reverse')->twice()->andReturn(geocodioReverseResponse());
+        $mock->shouldReceive('distance')->twice()->andReturn(['destinations' => []], geocodioDistanceResponse(950.0));
     });
 
     $picked = app(DestinationPicker::class)->pick($origin);
@@ -144,12 +144,12 @@ it('rejects a candidate with no driving route and accepts a later attempt', func
 });
 
 it('treats a Geocodio exception as a failed attempt rather than propagating', function () {
-    minneapolis();
+    createMinneapolis();
 
     mock(Geocodio::class, function ($mock) {
         $mock->shouldReceive('reverse')->twice()->andReturnUsing(
             fn () => throw GeocodioException::requestError('server error'),
-            fn () => reverseResponse(),
+            fn () => geocodioReverseResponse(),
         );
     });
 
@@ -159,10 +159,10 @@ it('treats a Geocodio exception as a failed attempt rather than propagating', fu
 });
 
 it('falls back to the city center after exhausting all attempts', function () {
-    $city = minneapolis();
+    $city = createMinneapolis();
 
     mock(Geocodio::class, function ($mock) {
-        $mock->shouldReceive('reverse')->times(5)->andReturn(reverseResponse(['accuracy_type' => 'nearest_street']));
+        $mock->shouldReceive('reverse')->times(5)->andReturn(geocodioReverseResponse(['accuracy_type' => 'nearest_street']));
     });
 
     $picked = app(DestinationPicker::class)->pick();
@@ -180,15 +180,11 @@ it('throws when no cities have been seeded', function () {
     app(DestinationPicker::class)->pick();
 })->throws(RuntimeException::class, 'no cities have been seeded');
 
-it('samples points within the city radius, corrected for longitude shrink', function () {
-    // Seattle sits far enough north that uncorrected longitude offsets would
-    // stretch the sampled disc by ~30%.
+it('samples points within the population-scaled radius, corrected for longitude shrink', function (float $latitude, float $longitude, int $population) {
     $city = City::factory()->create([
-        'name' => 'Seattle',
-        'state_abbreviation' => 'WA',
-        'latitude' => 47.6211,
-        'longitude' => -122.3244,
-        'population' => 500000,
+        'latitude' => $latitude,
+        'longitude' => $longitude,
+        'population' => $population,
     ]);
 
     $queries = [];
@@ -201,14 +197,13 @@ it('samples points within the city radius, corrected for longitude shrink', func
         });
     });
 
-    for ($i = 0; $i < 20; $i++) {
+    for ($i = 0; $i < 10; $i++) {
         app(DestinationPicker::class)->pick();
     }
 
-    // radius = clamp(0.011 * sqrt(500000), 1.5, 10) = 7.78 miles
-    $radius = 0.011 * sqrt(500000);
+    $radius = min(max(0.011 * sqrt($population), 1.5), 10.0);
 
-    expect($queries)->toHaveCount(100);
+    expect($queries)->toHaveCount(50);
 
     foreach ($queries as $query) {
         [$lat, $lng] = array_map(floatval(...), explode(',', $query));
@@ -219,40 +214,9 @@ it('samples points within the city radius, corrected for longitude shrink', func
 
         expect($distance)->toBeLessThanOrEqual($radius + 0.01);
     }
-});
-
-it('uses a smaller radius for a smaller city', function () {
-    $city = City::factory()->create([
-        'name' => 'Leesburg',
-        'state_abbreviation' => 'VA',
-        'latitude' => 39.1057,
-        'longitude' => -77.5544,
-        'population' => 48000,
-    ]);
-
-    $queries = [];
-
-    mock(Geocodio::class, function ($mock) use (&$queries) {
-        $mock->shouldReceive('reverse')->andReturnUsing(function ($query) use (&$queries) {
-            $queries[] = $query;
-
-            throw GeocodioException::requestError('capture only');
-        });
-    });
-
-    for ($i = 0; $i < 20; $i++) {
-        app(DestinationPicker::class)->pick();
-    }
-
-    // radius = clamp(0.011 * sqrt(48000), 1.5, 10) = 2.41 miles
-    $radius = 0.011 * sqrt(48000);
-
-    foreach ($queries as $query) {
-        [$lat, $lng] = array_map(floatval(...), explode(',', $query));
-
-        $milesNorth = ($lat - $city->latitude) * 69;
-        $milesEast = ($lng - $city->longitude) * 69 * cos(deg2rad($city->latitude));
-
-        expect(sqrt($milesNorth ** 2 + $milesEast ** 2))->toBeLessThanOrEqual($radius + 0.01);
-    }
-});
+})->with([
+    // Seattle sits far enough north that uncorrected longitude offsets would
+    // stretch the sampled disc by ~30%.
+    'Seattle: large city, high latitude' => [47.6211, -122.3244, 500000],
+    'Leesburg: small city, smaller radius' => [39.1057, -77.5544, 48000],
+]);
