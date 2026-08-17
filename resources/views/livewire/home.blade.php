@@ -13,8 +13,6 @@ class extends Component {
     {
         $trip = Trip::query()
             ->with(['originLocation.city', 'destinationLocation.city'])
-            ->whereNotNull('origin_location_id')
-            ->whereNotNull('destination_location_id')
             ->underway()
             ->latest('departure')
             ->first();

@@ -120,6 +120,27 @@ it('picks an origin as well when there are no trips yet', function () {
         ->and($trip->destination_location_id)->toBe($destination->id);
 });
 
+it('replaces a mid-window trip whose locations were removed', function () {
+    $ghost = Trip::factory()->create([
+        'departure' => Carbon::now()->subDay(),
+        'arrival' => Carbon::now()->addDay(),
+    ]);
+    $ghost->update(['origin_location_id' => null, 'destination_location_id' => null]);
+
+    $origin = Location::factory()->create();
+    $destination = Location::factory()->create();
+
+    mock(DestinationPicker::class, function ($mock) use ($origin, $destination) {
+        $mock->shouldReceive('pick')->once()->withNoArgs()->andReturn(new PickedDestination($origin, null));
+        $mock->shouldReceive('pick')->once()->with($origin)->andReturn(new PickedDestination($destination, 700.0));
+    });
+
+    $this->artisan('trip:next')->assertSuccessful();
+
+    expect(Trip::count())->toBe(2)
+        ->and(Trip::latest('id')->first()->destination_location_id)->toBe($destination->id);
+});
+
 it('starts a new trip when the previous trip has no destination location', function () {
     $trip = Trip::factory()->create([
         'departure' => Carbon::now()->subDays(20),

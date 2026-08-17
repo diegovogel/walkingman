@@ -39,11 +39,15 @@ class Trip extends Model
     }
 
     /**
-     * Trips currently being walked: departed, but not yet arrived.
+     * Trips currently being walked: departed, not yet arrived, and with both
+     * endpoints intact. A trip whose locations were deleted (the FKs null on
+     * delete) cannot be walked or rendered, so it does not count as underway.
      */
     public function scopeUnderway(Builder $query): Builder
     {
         return $query
+            ->whereNotNull('origin_location_id')
+            ->whereNotNull('destination_location_id')
             ->where('departure', '<=', now())
             ->where('arrival', '>=', now());
     }
