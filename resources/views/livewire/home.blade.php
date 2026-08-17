@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Trip;
+use App\Services\LifetimeStats;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
@@ -27,6 +28,7 @@ class extends Component {
 
         return [
             'trip' => $trip,
+            'lifetimeStats' => LifetimeStats::compile(),
             'milesRemaining' => $trip?->milesRemaining(),
             'timeRemaining' => $trip?->timeRemaining(),
             'departedOn' => $trip?->departedAt()->setTimezone($eastern),
@@ -68,6 +70,32 @@ class extends Component {
         <flux:text class="mt-8">
             {{ __(':miles miles remaining.', ['miles' => number_format($milesRemaining)]) }}<br />
             {{ __('Arriving in :days d, :hours h, :minutes m.', $timeRemaining) }}
+        </flux:text>
+    @endif
+
+    @if ($lifetimeStats)
+        <flux:heading size="lg" level="2" class="mt-10 uppercase tracking-wide">{{ __('Lifetime stats') }}</flux:heading>
+
+        <flux:text class="mt-4">
+            {{ trans_choice(
+                '{1}:total trip completed.|[2,*]:total trips completed.',
+                $lifetimeStats->tripsCompleted,
+                ['total' => number_format($lifetimeStats->tripsCompleted)],
+            ) }}<br />
+            {{ __(':miles miles walked.', ['miles' => number_format($lifetimeStats->milesWalked)]) }}<br />
+            {{ trans_choice(
+                '{0}:days walking.|{1}:count year, :days walking.|[2,*]:count years, :days walking.',
+                $lifetimeStats->yearsWalking,
+                ['days' => trans_choice('{1}:count day|[2,*]:count days', $lifetimeStats->daysWalking)],
+            ) }}<br />
+            {{ trans_choice(
+                '{1}:total city in :states visited.|[2,*]:total cities in :states visited.',
+                $lifetimeStats->citiesVisited,
+                [
+                    'total' => number_format($lifetimeStats->citiesVisited),
+                    'states' => trans_choice('{1}:count state|[2,*]:count states', $lifetimeStats->statesVisited),
+                ],
+            ) }}
         </flux:text>
     @endif
 
