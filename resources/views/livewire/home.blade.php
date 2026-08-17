@@ -12,12 +12,10 @@ new
 class extends Component {
     public function with(): array
     {
-        $trip = Trip::query()
+        $trip = Trip::underway()
             ->with(['originLocation.city', 'destinationLocation.city'])
             ->whereNotNull('origin_location_id')
             ->whereNotNull('destination_location_id')
-            ->where('departure', '<=', now())
-            ->where('arrival', '>=', now())
             ->latest('departure')
             ->first();
 

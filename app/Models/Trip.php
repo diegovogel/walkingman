@@ -49,6 +49,16 @@ class Trip extends Model
         $query->whereNotNull('arrival')->where('arrival', '<=', now());
     }
 
+    /**
+     * The trip he is walking right now. A null arrival never compares true, so
+     * it is excluded here as well.
+     */
+    #[Scope]
+    protected function underway(Builder $query): void
+    {
+        $query->where('departure', '<=', now())->where('arrival', '>=', now());
+    }
+
     public function departedAt(): Carbon
     {
         return Carbon::createFromTimestamp($this->departure);
