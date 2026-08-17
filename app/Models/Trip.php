@@ -109,6 +109,27 @@ class Trip extends Model
         ];
     }
 
+    /**
+     * How far along he is, 0 through 1. Measured in the same whole minutes
+     * milesRemaining() uses, so the spot on the line and the mileage beneath it
+     * can never disagree.
+     */
+    public function progress(): float
+    {
+        $total = (int) $this->departedAt()->diffInMinutes($this->arrivesAt());
+
+        if ($total <= 0) {
+            return 1.0;
+        }
+
+        return min(1.0, max(0.0, 1 - $this->minutesRemaining() / $total));
+    }
+
+    public function hasArrived(): bool
+    {
+        return $this->arrivesAt()->isPast();
+    }
+
     private function minutesRemaining(): int
     {
         return (int) max(0, Carbon::now()->diffInMinutes($this->arrivesAt(), absolute: false));
