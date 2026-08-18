@@ -98,7 +98,10 @@ class extends Component {
         </div>
 
         @if ($hasArrived)
-            <flux:callout variant="success" class="mt-8">
+            {{-- w-full is load-bearing: the callout is itself a flex container,
+                 so as a flex item under the page's items-center it otherwise
+                 collapses to one word per line. --}}
+            <flux:callout variant="success" class="mt-8 w-full">
                 <flux:callout.text>{{ __('Jack has arrived! Reload the page to see his next trip.') }}</flux:callout.text>
             </flux:callout>
         @endif
