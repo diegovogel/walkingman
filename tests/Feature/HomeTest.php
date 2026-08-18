@@ -131,7 +131,11 @@ test('it does not present an arrived trip as still underway', function () {
 
     $response->assertOk()
         ->assertDontSee('miles remaining')
-        ->assertDontSee('Arriving in');
+        ->assertDontSee('Arriving in')
+        // The arrival message belongs to a page that watched him finish. Landing
+        // fresh in the gap before the next trip shows him standing alone.
+        ->assertDontSee('Jack has arrived')
+        ->assertDontSee('margin-inline-start');
 });
 
 test('it ignores a trip whose locations were never backfilled', function () {
