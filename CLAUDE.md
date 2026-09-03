@@ -50,6 +50,8 @@ them too).
   dirty or unpushed (commits survive in the main repo's `.git` regardless). Merged
   branches are deleted automatically so the name can be recreated; unmerged
   branches are kept (`create <name> --resume` reattaches one).
+- **`destroy` refuses to run from inside the worktree it removes.** Leave the worktree first: `ExitWorktree` with
+  action `keep` (a harmless no-op if the session never entered), then run it from the main checkout.
 - **Dependencies auto-reconcile after a pull.** A committed git hook (`.githooks/`,
   installed by the env system) runs `composer install && npm install` whenever a
   merge/pull/rebase changes `composer.lock` or `package-lock.json`, so the checkout
