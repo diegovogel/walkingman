@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "node scripts/guard-not-in-env.cjs && vite",
+        "dev": "./scripts/agent-env.sh guard && vite",
         "serve": "./scripts/agent-env.sh serve",
         "stop": "./scripts/agent-env.sh stop",
         "destroy": "./scripts/agent-env.sh destroy"

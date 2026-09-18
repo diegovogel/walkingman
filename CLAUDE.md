@@ -11,6 +11,13 @@ set, and a logs dir. Each env also gets its own MySQL schema
 queue and cache both use the `database` driver, so the per-env schema isolates
 them too).
 
+- **The engine and this project's env config live outside the repo.**
+  `scripts/agent-env.sh` is a shim: it execs the engine in the
+  `agent-environments` skill (`~/.claude/skills/agent-environments/assets/`)
+  and the project's config (ports, hooks, dependency dirs) is
+  `~/.claude/agent-environments/walkingman/project.sh`. Change env behavior in
+  the config, never in the shim; a machine without the skill gets a clear
+  error from the shim and nothing else in the project depends on it.
 - **Create your own env mid-session**: `EnterWorktree` with a task-derived name,
   then `./scripts/agent-env.sh provision`. Or adopt a pre-built env via
   `EnterWorktree` with `path: .claude/worktrees/<name>` (built with
@@ -20,7 +27,8 @@ them too).
   set, unused here. Each env takes the lowest free slot; `destroy` frees it.
 - **Inside an env, NEVER run `composer dev` or `npm run dev`**: both are pinned to
   the main checkout's ports and collide. Enforced by
-  `scripts/guard-not-in-env.cjs`. Use `./scripts/agent-env.sh serve <name>`
+  `./scripts/agent-env.sh guard`, the first step of both. Use
+  `./scripts/agent-env.sh serve <name>`
   (background, PID-managed, health-checked; logs in the env's `logs/`). Most tasks
   need only `php artisan test` and `npm run build`; only `serve` when you need a
   live server.
