@@ -32,9 +32,18 @@ them too).
   (background, PID-managed, health-checked; logs in the env's `logs/`). Most tasks
   need only `php artisan test` and `npm run build`; only `serve` when you need a
   live server.
-- **Herd serves only the main checkout** at `walkingman.test`. Envs are served by
-  `php artisan serve` on their own ports, so don't expect a `.test` domain for an
-  env, and don't point Herd at one.
+- **Envs are served by `php artisan serve` on their own ports, never by Herd**,
+  which serves the main checkout at `walkingman.test`. Herd 2.0 also lists each
+  env at `worktree-<name>.walkingman.test`, but opening that URL in a browser or
+  Playwright adopts the env as a Herd workspace and edits its `.env`, and Herd's
+  own delete skips the teardown guards. Never open it, and never run
+  `herd workspace*` on an env from anywhere (inside it, or by name or path from
+  the main checkout). If one was adopted anyway, `list` flags it and `destroy`
+  is the only way to unlink it. The Boost "herd rules" block below describes
+  the main checkout only: inside an env nothing serves the site until
+  `./scripts/agent-env.sh serve <name>`, which prints its URL
+  (http://127.0.0.1:<web port>); don't use `walkingman.test` or
+  `get-absolute-url` for an env.
 - **Re-anchor after any restart or interruption.** A Claude restart drops the
   `EnterWorktree` tracking AND can silently reset the Bash cwd back to the main
   checkout on the default branch, so an env `php artisan test` / `git diff` can run
